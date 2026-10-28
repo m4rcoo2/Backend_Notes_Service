@@ -72,6 +72,14 @@ Non inserire segreti, token, credenziali o contenuti personali nel log.
 - Mantieni il database SQLite locale e i file `.env` fuori dal controllo versione; conserva invece `.env.example` e le migration Prisma.
 - Evita bonus e complessità aggiuntiva finché CRUD, validazioni, ricerca/filtri, test e documentazione non sono completi.
 
+## Gestione dipendenze npm
+
+- Non eseguire autonomamente installazioni, rimozioni o aggiornamenti di pacchetti npm.
+- Quando una dipendenza è necessaria, indica allo sviluppatore il pacchetto,
+  il motivo e il comando npm esatto da eseguire.
+- Dopo l'intervento dello sviluppatore, verifica versione, manifesto
+  `package.json`, lockfile e comandi di progetto interessati.
+
 ## Comunicazione
 
 - Spiega brevemente le decisioni tecniche e le verifiche svolte.

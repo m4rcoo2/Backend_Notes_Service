@@ -20,7 +20,7 @@ MVP REST per note operative: CRUD, search, filters, SQLite persistence.
 - api: `PATCH /notes/:id` + nonempty subset writable fields → `200 Note` | `400` | `404`.
 - api: `DELETE /notes/:id` → `204` | `404 {error,message}`.
 - env: `DATABASE_URL` ! set; SQLite Prisma URL.
-- cmd: `npm run dev`, `npm run build`, `npm test`, `npm run prisma:migrate`.
+- cmd: `npm run dev`, `npm run build`, `npm test`, `npm run prisma:migrate`, `npm run prisma:deploy`, `npm run prisma:generate`.
 
 `Note` → `{id,title,content,author,context,type,priority,status,createdAt,updatedAt}`.
 
@@ -38,12 +38,13 @@ MVP REST per note operative: CRUD, search, filters, SQLite persistence.
 - V8: source/test/config tracked; `.env`, SQLite files, generated output ignored; `.env.example` & migrations tracked.
 - V9: README documents only implemented APIs, commands, model, environment, errors.
 - V10: ∀ T1 baseline → `npm run build` exits `0` before app modules exist.
+- V11: `DATABASE_URL` targets ignored `prisma/dev.db`; tracked migration applies on empty DB.
 
 ## §T Tasks
 |id|status|task|cites|
 | --- | --- | --- | --- |
 |T1|x|add package/TS/Vitest config, `.env.example`, precise gitignore|V7,V8,V10,I.env,I.cmd|
-|T2|.|add Prisma Note schema & initial migration|V1,V5,V7,I.api|
+|T2|x|add Prisma Note schema & initial migration|V1,V5,V7,V11,I.api|
 |T3|.|add schemas, Prisma singleton, Notes service|V1,V4,V5,V6|
 |T4|.|add Fastify app, routes, server & error mapping|V1,V2,V3,V4,V5,V6,I.api|
 |T5|.|add API tests via Fastify inject|V1,V2,V3,V4,V5,V6|
@@ -55,3 +56,4 @@ MVP REST per note operative: CRUD, search, filters, SQLite persistence.
 | --- | --- | --- | --- |
 |B1|2026-10-28|dependencies absent|rerun install; verify `npm ls`|
 |B2|2026-10-29|empty `src` → TS18003|V10|
+|B3|2026-10-29|SQLite URL root/path mismatch|V11|

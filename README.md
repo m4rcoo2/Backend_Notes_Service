@@ -79,16 +79,32 @@ Creare il file `.env` a partire dall'esempio:
 Copy-Item .env.example .env
 ```
 
-`DATABASE_URL` indica il percorso del database SQLite locale. Il file `.env` e
-il database non vengono versionati.
+`DATABASE_URL` indica il percorso del database SQLite locale
+(`file:./prisma/dev.db`). Il file `.env` e il database non vengono versionati.
 
 ## Database e migration
 
-Lo schema e la migration Prisma saranno aggiunti nella fase successiva. Quando
-presenti, si applicheranno con:
+Il modello `Note` è definito in `prisma/schema.prisma`; la migration iniziale è
+versionata in `prisma/migrations/`. Il database locale `prisma/dev.db` viene
+creato localmente e resta escluso da Git.
+
+Per applicare tutte le migration già versionate:
 
 ```bash
-npm run prisma:migrate
+npm run prisma:deploy
+```
+
+Per creare una nuova migration durante lo sviluppo, dopo una modifica allo
+schema:
+
+```bash
+npm run prisma:migrate -- --name descrizione_modifica
+```
+
+Prisma 7 non genera automaticamente il client dopo una migration; esegui:
+
+```bash
+npm run prisma:generate
 ```
 
 ## Avvio del progetto

@@ -142,6 +142,15 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
+# SQLite locale generato da Prisma: non fa parte della consegna.
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-wal
+prisma/*.db-shm
+
+# Client Prisma generato localmente dal comando `npm run prisma:generate`.
+generated/
+
 # Astro generated types
 .astro/
 

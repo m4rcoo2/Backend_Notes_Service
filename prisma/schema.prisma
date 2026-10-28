@@ -1,0 +1,40 @@
+// Intento di sviluppo: modello minimo e persistente delle note operative.
+// Le validazioni dei payload HTTP saranno introdotte nella task T3.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum NoteType {
+  REQUEST
+  ISSUE
+  DECISION
+  TASK
+  FOLLOW_UP
+  INFO
+}
+
+enum NoteStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+  ARCHIVED
+}
+
+model Note {
+  id        String     @id @default(cuid())
+  title     String
+  content   String
+  author    String
+  context   String
+  type      NoteType
+  priority  Int?
+  status    NoteStatus
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
