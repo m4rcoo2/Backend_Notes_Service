@@ -6,13 +6,13 @@ La challenge tecnica prevede lo sviluppo di un servizio backend per la gestione 
 La richiesta dell'utente è quella di realizzare uno strumento aziendale utile a tenere traccia delle informazioni utili per un determinato progetto o cliente all'interno del team. Necessario è, quindi, avere una struttura sensata per il dato informativo principale, ovvero la Nota (vedi il Data Model). L'utente deve poter inserire una nota, con tutti i dettagli informativi del caso, di cui titolo, testo, autore, data di creazione (o di eventuale modifica), stato e contesto sono obbligatori, mentre importanza è un campo opzionale.
 
 Ho deciso di non includere una tabella relativa al campo cliente (o comunque relativa al contesto, come ad esempio potrebbe essere una commessa) in quanto non utile all'implementazione effettiva del servizio.
-### Funzionalita inserite
-Per le funzionalita inserite ho pensato alle neecssita operative reali di una nota. Ho pensato come se avessi davanti una lavagna cancellabile, che è il file SQLLite, in cui ognii utilizzatore puo scrivere, leggere, aggiornare o eliminare una nota su di essa.
-Ecco quindi che da qui tornano le varie API implementate, tra cui: 
-- POST Notes per pubblicare una nota, ovvero scrivere sulla lavagna
-- GET notes per leggeretutta la lavagna
+### Funzionalità previste
+Per le funzionalita inserite ho pensato alle neecssita operative reali di una nota. Ho immaginato come se avessi davanti una lavagna cancellabile, che è il file SQLite, in cui ogni utilizzatore puo scrivere, leggere, aggiornare o eliminare una nota su di essa.
+Sono quindi previste le seguenti API:
+- POST notes per pubblicare una nota, ovvero scrivere sulla lavagna
+- GET notes per leggerec tutta la lavagna
 - GET notes/:id nel quale si legge una specifica nota
-- PATCH notes/:id per andare a modificare una specifica nota. Qui è semplificato, perche la richiesta deve comprendere anche i campi di modifica
+- PATCH notes/:id per andare a modificare una specifica nota. Qui è semplificato, perchè la richiesta deve comprendere anche i campi di modifica
 - DELETE notes/:id per cancellare una nota
 
 ### Funzionalita non implementate 
@@ -56,20 +56,61 @@ Come da linee guida della challenge, lo stack applicativo prevede:
 - TypeScript come linguaggio applicativo.
 - Fastify si occupa di esporre le API, di gestire le route e di eseguire la validazione.
 - SQLite per la creazione di un file DB di tipo SQL.
-- Prisma ORM permette di connettere in maniera non articolata typescript e SQLLite, per semplificare le operazioni sul DB.
+- Prisma ORM permette di connettere in maniera non articolata typescript e SQLite, per semplificare le operazioni sul DB.
 - Vitest per i test.
+
+La configurazione usa i pacchetti `fastify` e `@prisma/client` in esecuzione,
+oltre a `prisma`, `typescript`, `tsx`, `vitest` e `@types/node` per sviluppo,
+build, migration e test.
 
 ## Installazione
 
+Prerequisito: Node.js 20 o successivo.
+
+```bash
+npm install
+```
+
 ## Configurazione ambiente
+
+Creare il file `.env` a partire dall'esempio:
+
+```bash
+Copy-Item .env.example .env
+```
+
+`DATABASE_URL` indica il percorso del database SQLite locale. Il file `.env` e
+il database non vengono versionati.
 
 ## Database e migration
 
+Lo schema e la migration Prisma saranno aggiunti nella fase successiva. Quando
+presenti, si applicheranno con:
+
+```bash
+npm run prisma:migrate
+```
+
 ## Avvio del progetto
+
+Il comando previsto per l'avvio in sviluppo è:
+
+```bash
+npm run dev
+```
+
+Diventerà operativo dopo l'implementazione del server e delle route.
 
 ## Test
 
-## API disponibili
+```bash
+npm test
+```
+
+La configurazione Vitest è già disponibile; i test sulle API saranno aggiunti
+insieme all'applicazione.
+
+## API previste
 
 Base URL: `http://localhost:3000`
 
@@ -127,11 +168,15 @@ tutti i filtri inviati.
     -d '{ ... }'
     curl "http://localhost:3000/notes?status=OPEN&priority=4"
 
-## Esempi di richieste
+## Esempi di richieste previste
 
 ## Scelte implementative
 
 ## Uso dell'AI
+Per questo progetto è stato utilizzato un piano Codex con GPT-5.6 terra con effort Medio.
+Inizialmente è stato usato per fare brainstorming, per comprendere meglio alcuni concetti poco chiari e per aiutarmi nella spiegazione delle componenti dello stack applicativo.
+una volta chiariti gli elementi di dubbio, ho iniziato a formare il Data Model, chiedendo conferma a seguito per capire se la struttura rispettasse i vincoli tecnici richiesti.
+Una volta fatto ciò ho integrato documenti guida all'AI, come AGENTS.md e, successivamente, SPEC.md, che uso spesso per imporre vincoli tecnici non troppo rigidi ma che mi pernmettano di non uscire dalle richieste.
 
 ## Limiti noti
 
