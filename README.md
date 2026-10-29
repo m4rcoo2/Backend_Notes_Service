@@ -1,347 +1,290 @@
 # Backend Notes Service
 
 ## Descrizione
-La challenge tecnica prevede lo sviluppo di un servizio backend per la gestione di Note Operative interne. 
+
+Backend REST per raccogliere e gestire note operative interne. Una nota può descrivere una richiesta emersa con un cliente, un problema da verificare, una decisione, un'attività o un'informazione utile al team.
+
+Il progetto è un MVP: espone le operazioni essenziali su una singola risorsa, conserva i dati in un database SQLite locale e include test automatici dei comportamenti principali.
+
 ## Analisi della richiesta
-La richiesta dell'utente è quella di realizzare uno strumento aziendale utile a tenere traccia delle informazioni utili per un determinato progetto o cliente all'interno del team. Necessario è, quindi, avere una struttura sensata per il dato informativo principale, ovvero la Nota (vedi il Data Model). L'utente deve poter inserire una nota, con tutti i dettagli informativi del caso, di cui titolo, testo, autore, data di creazione (o di eventuale modifica), stato e contesto sono obbligatori, mentre importanza è un campo opzionale.
 
-Ho deciso di non includere una tabella relativa al campo cliente (o comunque relativa al contesto, come ad esempio potrebbe essere una commessa) in quanto non utile all'implementazione effettiva del servizio.
-### Funzionalità previste
-Per le funzionalita inserite ho pensato alle neecssita operative reali di una nota. Ho immaginato come se avessi davanti una lavagna cancellabile, che è il file SQLite, in cui ogni utilizzatore puo scrivere, leggere, aggiornare o eliminare una nota su di essa.
-Sono quindi previste le seguenti API:
-- POST notes per pubblicare una nota, ovvero scrivere sulla lavagna
-- GET notes per leggerec tutta la lavagna
-- GET notes/:id nel quale si legge una specifica nota
-- PATCH notes/:id per andare a modificare una specifica nota. Qui è semplificato, perchè la richiesta deve comprendere anche i campi di modifica
-- DELETE notes/:id per cancellare una nota
+La richiesta viene interpretata come l'esigenza di un punto unico, semplice e persistente in cui il team possa raccogliere informazioni operative legate a un cliente, a un progetto o a un'attività. Il risultato non vuole essere un prodotto collaborativo completo: rappresenta la base backend di un possibile strumento interno.
 
-### Funzionalita non implementate 
-Altre funzionalita che ho deciso di considerare ma di *non* implementare sono quelle relative alla proprieta di dato:
-un utente autore puo modificare una nota di sua proprieta, ma un utente senza autorizzazioni puo solamente visualizzarla. Per farlo sarebbe necessario introdurre un database di utenti, con vari priviliegi, grazie ai quali possono essere effettuate specifiche operazioni.
-### Domande al cliente
-Dopmande interessanti che mi sono venute in mente durante la lettura sono:
-- durata di conservazione del dato: se una nota non viene mai eliminata manualmente, dopo quanto viene eliminata in automatico? questo dovrebbe terenre conto anche di metriche come ultimo accesso alla nota, in modo da non cancellarle solo sulla base della data di creazione/modifica.
-- valutare se è necessario creare ridondanza del file db, che ad ora è presente solo in locale (anche se credo che sia solo una semplificazione di progetto).
+Per rendere una nota comprensibile anche a distanza di tempo, sono stati considerati essenziali titolo e contenuto, autore, contesto, tipo e stato. La priorità resta facoltativa: è utile per distinguere ciò che richiede attenzione, ma non deve trasformarsi in un dato obbligatorio quando non aggiunge valore. Identificativo e date sono invece generati dal server, così ogni nota conserva dati tecnici coerenti e non dipende dall'orologio o dalle scelte del client.
 
-### Implementazione
-L'implementazione, tenuto conto dei requisiti funzionali proposti, è stata strutturata come segue:
-#### Data Model
-Per ogni nota, si ha 
-- identificativo univoco (ID)
-- titolo (title)
-- testo (content)
-- autore (author)
-- data di creazione (creationDate)
-- data di modifica (updateDate)
-- categoria (type): comprende REQUEST, ISSUE, DECISION, TASK, FOLLOW_UP e INFO.
-- cliente o contesto (context): niente tabella Client separata. Il requisito richiede collegamento a cliente o contesto, non una rubrica clienti completa, per questo è un semplice campo testuale.
-- importanza (priority): campo numerico da 1 a 5
-- stato (status): aperta, in sviluppo, chiusa, archiviata. 
+L'MVP include creazione, elenco, dettaglio, modifica, eliminazione, ricerca testuale, filtri e persistenza. Restano fuori dal perimetro frontend, utenti, autenticazione, ruoli, paginazione, ordinamento configurabile, allegati e notifiche. Sono funzionalità plausibili in un prodotto reale, ma anticiparle avrebbe aumentato la complessità senza migliorare il flusso essenziale richiesto dalla challenge.
 
+Il campo `context` è volutamente testo libero: può contenere il nome di un cliente, di una commessa, di un progetto o di un'attività. In questo modo la nota può essere collegata rapidamente al suo ambito senza introdurre una tabella clienti e API aggiuntive non richieste. Se il contesto dovesse diventare condiviso, validato o gestito come anagrafica, il modello potrà evolvere in una risorsa dedicata.
 
-### Criteri di accettazione del MVP
+Prima di un utilizzo in produzione sarebbe utile chiarire chi può leggere e modificare le note, se serve uno storico delle modifiche, quali siano volumi, tempi di conservazione e regole di backup, se clienti e progetti debbano provenire da un'anagrafica e come vadano ordinati i risultati. Le risposte a queste domande inciderebbero direttamente su modello dati, sicurezza e priorità di sviluppo.
 
-Il MVP è considerato completato quando:
-
-- una nota valida può essere creata, letta, modificata ed eliminata;
-- input non validi restituiscono un errore coerente;
-- la lettura/modifica di una nota inesistente restituisce `404`;
-- la lista supporta ricerca testuale e filtri concordati;
-- i dati restano disponibili dopo il riavvio del servizio;
-- migration, test e avvio sono riproducibili seguendo il README.
+La consegna mantiene alcuni limiti intenzionali: SQLite è un database locale, non sono presenti controllo degli accessi né backup automatici e l'elenco non è paginato. Per un MVP sono compromessi ragionevoli; non sono invece caratteristiche adatte, senza ulteriori interventi, a un servizio esposto pubblicamente.
 
 ## Stack utilizzato
-Come da linee guida della challenge, lo stack applicativo prevede:
-- Node.js coem runtime che permette l'esecuzione del servizio in Typescript.
-- TypeScript come linguaggio applicativo.
-- Fastify si occupa di esporre le API, di gestire le route e di eseguire la validazione.
-- SQLite per la creazione di un file DB di tipo SQL.
-- Prisma ORM permette di connettere in maniera non articolata typescript e SQLite, per semplificare le operazioni sul DB.
-- Vitest per i test.
 
-La configurazione usa i pacchetti `fastify` e `@prisma/client` in esecuzione,
-oltre a `prisma`, `typescript`, `tsx`, `vitest` e `@types/node` per sviluppo,
-build, migration e test.
+- Node.js 20 o successivo, runtime dell'applicazione;
+- TypeScript, con compilazione in modalità strict;
+- Fastify, per il server HTTP e le route REST;
+- SQLite, database locale persistente;
+- Prisma ORM, per modello dati, migration e accesso al database;
+- Vitest, per i test automatici delle API.
 
 ## Installazione
 
-Prerequisiti: Git e Node.js 20 o successivo (include npm). Per verificare la
-versione installata:
+Prerequisiti: Git, Node.js 20+ e npm. Verificare l'ambiente:
 
-```bash
+```powershell
 node --version
 npm --version
 ```
 
-Su un nuovo dispositivo, clonare il repository e installare esattamente le
-dipendenze bloccate nel lockfile:
+Clonare il repository e installare le versioni bloccate nel lockfile:
 
-```bash
-git clone <URL_DEL_REPOSITORY>
+```powershell
+git clone https://github.com/m4rcoo2/Backend_Notes_Service.git
 cd backend-notes-service
 npm ci
 ```
 
-`npm ci` usa `package-lock.json` e rende riproducibile l'installazione. Se il
-repository viene invece ricevuto come cartella o archivio Git, entrare nella
-cartella radice del progetto e lanciare soltanto `npm ci`.
-
-Su PowerShell, se l'esecuzione di `npm` viene bloccata dalla policy locale,
-usare `npm.cmd` al posto di `npm` (per esempio `npm.cmd ci`).
+Su Windows, se la policy PowerShell blocca `npm.ps1`, usare `npm.cmd` al posto di `npm` in tutti i comandi seguenti.
 
 ## Configurazione ambiente
 
-Creare il file `.env` a partire dall'esempio:
+Creare il file `.env` locale a partire dall'esempio. Per Windows:
 
-```bash
+```powershell
 Copy-Item .env.example .env
 ```
 
-`DATABASE_URL` indica il percorso del database SQLite locale
-(`file:./prisma/dev.db`). Il file `.env` e il database non vengono versionati.
+L'unica variabile richiesta è `DATABASE_URL`:
 
-Variabili disponibili:
-
-| Variabile | Obbligatoria | Valore predefinito | Scopo |
+| Variabile | Obbligatoria | Esempio | Descrizione |
 | --- | --- | --- | --- |
-| `DATABASE_URL` | Sì | — | URL SQLite usato da Prisma. Per lo sviluppo usare `file:./prisma/dev.db`. |
-| `PORT` | No | `3000` | Porta HTTP del servizio. |
-| `HOST` | No | `127.0.0.1` | Interfaccia su cui il server rimane in ascolto. |
+| `DATABASE_URL` | Sì | `file:./prisma/dev.db` | Percorso del database SQLite usato da Prisma. |
+| `PORT` | No | `3000` | Porta HTTP del server. |
+| `HOST` | No | `127.0.0.1` | Interfaccia su cui il server ascolta. |
 
-Non inserire segreti nel file `.env.example`; per questo MVP contiene solo il
-percorso locale del database.
+`.env` e i file SQLite restano locali e sono ignorati da Git. Non inserire segreti in `.env.example`.
 
 ## Database e migration
 
-Il modello `Note` è definito in `prisma/schema.prisma`; la migration iniziale è
-versionata in `prisma/migrations/`. Il database locale `prisma/dev.db` viene
-creato localmente e resta escluso da Git.
+Il modello Prisma è in `prisma/schema.prisma`; la migration iniziale è versionata in `prisma/migrations/`. Il modello contiene una sola entità, `Note`:
 
-Per applicare tutte le migration già versionate:
+| Campo | Descrizione |
+| --- | --- |
+| `id` | Identificativo CUID generato dal server. |
+| `title`, `content` | Oggetto e testo della nota. |
+| `author` | Persona che registra la nota. |
+| `context` | Cliente, progetto, commessa o attività a cui si riferisce. |
+| `type` | `REQUEST`, `ISSUE`, `DECISION`, `TASK`, `FOLLOW_UP` oppure `INFO`. |
+| `priority` | Facoltativa; intero da 1 a 5. |
+| `status` | `OPEN`, `IN_PROGRESS`, `CLOSED` oppure `ARCHIVED`. |
+| `createdAt`, `updatedAt` | Timestamp generati e aggiornati dal server. |
 
-```bash
+Dopo l'installazione, generare il client Prisma e applicare le migration:
+
+```powershell
+npm run prisma:generate
 npm run prisma:deploy
 ```
 
-Generare il client Prisma prima del build o dell'avvio, in particolare dopo un
-clone pulito o dopo una modifica dello schema:
+Per creare una nuova migration durante lo sviluppo, dopo aver modificato lo schema:
 
-```bash
-npm run prisma:generate
-```
-
-Per creare una nuova migration durante lo sviluppo, dopo una modifica allo
-schema:
-
-```bash
+```powershell
 npm run prisma:migrate -- --name descrizione_modifica
 ```
 
-Per preparare un nuovo dispositivo la sequenza completa è quindi:
-
-```bash
-npm ci
-Copy-Item .env.example .env
-npm run prisma:generate
-npm run prisma:deploy
-npm run build
-```
-
-Su macOS/Linux sostituire il secondo comando con `cp .env.example .env`.
-Il file `prisma/dev.db` verrà creato localmente dalla migration; non deve essere
-aggiunto a Git. Le migration e `.env.example`, invece, fanno parte della
-consegna e sono versionati.
+Il database `prisma/dev.db` viene creato localmente e non va versionato. Su macOS o Linux, per copiare l'ambiente usare `cp .env.example .env`.
 
 ## Avvio del progetto
 
-Il comando previsto per l'avvio in sviluppo è:
+Per lo sviluppo:
 
-```bash
+```powershell
 npm run dev
 ```
 
-Il server espone `http://127.0.0.1:3000` salvo configurazione diversa di
-`HOST` o `PORT`. Il comando resta attivo e riavvia il processo quando cambiano
-i file TypeScript.
+Il server è disponibile in `http://127.0.0.1:3000`, salvo configurazione diversa di `HOST` o `PORT`. Per compilare ed eseguire il codice compilato:
 
-Per simulare l'esecuzione di produzione dopo il build:
-
-```bash
+```powershell
 npm run build
 npm start
 ```
 
-Per renderlo raggiungibile da altri dispositivi della rete locale impostare,
-solo se necessario e con le adeguate regole di rete, `HOST=0.0.0.0`. Il servizio
-non implementa autenticazione: non esporlo pubblicamente in questa forma.
+Il servizio non implementa autenticazione. Non impostare `HOST=0.0.0.0` né esporre il servizio fuori dalla rete locale senza prima introdurre le protezioni necessarie.
 
 ## Test
 
-```bash
+```powershell
 npm test
 ```
 
-La suite Vitest esegue cinque test API tramite `Fastify.inject`, senza aprire
-una porta HTTP. Prima dei test viene applicata la migration a
-`prisma/test.db`, separato dal database di sviluppo. I casi verificano:
+La suite usa `Fastify.inject`: le richieste vengono inviate direttamente all'applicazione Fastify, senza aprire una porta HTTP. Questo mantiene i test rapidi e concentrati sul contratto delle API. Prima dell'esecuzione Prisma applica le migration a `prisma/test.db`, un database separato da quello di sviluppo: ogni test può creare e rimuovere dati senza modificare le note locali.
 
-- creazione valida con ID e timestamp assegnati dal server;
-- payload non valido e PATCH vuota;
-- modifica parziale;
-- ricerca e combinazione dei filtri, inclusi `title` e `content`;
-- nota inesistente ed eliminazione.
+I cinque test scelti coprono i comportamenti che rendono affidabile il flusso principale:
 
-Il database di test è locale e ignorato da Git. Per una verifica completa su un
-nuovo dispositivo, dopo la preparazione del database eseguire:
+- la creazione di una nota valida verifica che i dati siano persistiti e che il server generi ID e timestamp;
+- un payload con priorità non valida e una `PATCH` vuota verificano che l'API rifiuti richieste ambigue o fuori contratto prima di scrivere nel database;
+- l'aggiornamento parziale verifica che una modifica non sovrascriva involontariamente i campi non inviati;
+- ricerca e filtri combinati verificano che le note possano essere recuperate in modo utile nel lavoro quotidiano;
+- la nota inesistente e l'eliminazione verificano la risposta `404` e confermano che una nota eliminata non sia più leggibile.
 
-```bash
+La suite non mira alla copertura totale del codice: è pensata per proteggere i comportamenti richiesti e i punti in cui una regressione sarebbe più visibile per chi usa l'API.
+
+Per una verifica completa dopo un clone:
+
+```powershell
+npm run prisma:generate
+npm run prisma:deploy
 npm run build
 npm test
 ```
 
 ## API disponibili
 
-Base URL: `http://localhost:3000`
+Base URL: `http://127.0.0.1:3000`. Le richieste con body devono inviare `Content-Type: application/json`.
 
-Tutte le richieste con body usano `Content-Type: application/json`.
-
-### Endpoint
-
-| Metodo | Endpoint | Input | Risposta |
+| Metodo | Endpoint | Esito positivo | Errori gestiti |
 | --- | --- | --- | --- |
-| `POST` | `/notes` | Body JSON con i campi della nota | `201` e nota creata; `400` se non valida |
-| `GET` | `/notes` | Filtri query opzionali | `200` e lista di note; `400` se i filtri non sono validi |
-| `GET` | `/notes/:id` | ID della nota | `200` e nota; `404` se assente |
-| `PATCH` | `/notes/:id` | Uno o più campi modificabili | `200` e nota aggiornata; `400` o `404` |
-| `DELETE` | `/notes/:id` | ID della nota | `204`; `404` se assente |
+| `POST` | `/notes` | `201` e nota creata | `400` payload non valido |
+| `GET` | `/notes` | `200` e lista di note | `400` filtri non validi |
+| `GET` | `/notes/:id` | `200` e nota richiesta | `400` ID vuoto; `404` assente |
+| `PATCH` | `/notes/:id` | `200` e nota aggiornata | `400` ID o payload non validi; `404` assente |
+| `DELETE` | `/notes/:id` | `204` senza body | `400` ID vuoto; `404` assente |
 
-### Creazione e modifica
+### Payload delle note
 
-Ogni risposta di successo che contiene una nota ha questa forma:
+In creazione sono obbligatori tutti i campi eccetto `priority`. Il server rifiuta `id`, `createdAt`, `updatedAt` e altri campi sconosciuti. I valori testuali vengono privati degli spazi iniziali e finali.
 
-| Campo | Tipo | Gestione |
-| --- | --- | --- |
-| `id` | stringa | Generato dal server. |
-| `title` | stringa, 1–200 caratteri | Obbligatorio in creazione. |
-| `content` | stringa, 1–10.000 caratteri | Obbligatorio in creazione. |
-| `author` | stringa, 1–120 caratteri | Obbligatorio in creazione. |
-| `context` | stringa, 1–200 caratteri | Obbligatorio in creazione. |
-| `type` | enum | `REQUEST`, `ISSUE`, `DECISION`, `TASK`, `FOLLOW_UP`, `INFO`. |
-| `priority` | intero opzionale | Se presente, da `1` a `5`. |
-| `status` | enum | `OPEN`, `IN_PROGRESS`, `CLOSED`, `ARCHIVED`. |
-| `createdAt` | data ISO 8601 | Generata dal server. |
-| `updatedAt` | data ISO 8601 | Generata dal server e aggiornata a ogni PATCH. |
+| Campo | Regola |
+| --- | --- |
+| `title` | Stringa non vuota, massimo 200 caratteri. |
+| `content` | Stringa non vuota, massimo 10.000 caratteri. |
+| `author` | Stringa non vuota, massimo 120 caratteri. |
+| `context` | Stringa non vuota, massimo 200 caratteri. |
+| `type` | Uno dei sei valori elencati nel modello dati. |
+| `priority` | Opzionale; intero da 1 a 5. |
+| `status` | Uno dei quattro valori elencati nel modello dati. |
 
-`POST /notes` richiede tutti i campi eccetto `priority`; `id`, `createdAt` e
-`updatedAt` non vengono accettati dal client. `PATCH /notes/:id` accetta un
-sottoinsieme non vuoto dei soli campi modificabili (`title`, `content`,
-`author`, `context`, `type`, `priority`, `status`). I valori testuali sono
-ripuliti dagli spazi iniziali e finali; i campi sconosciuti o vuoti sono rifiutati.
+`PATCH /notes/:id` accetta almeno un campo modificabile fra quelli sopra. Non è possibile inviare un body vuoto né modificare direttamente ID e timestamp.
 
-Esempio di payload per la creazione:
+Una nota restituita dal server ha questa forma:
+
 ```json
 {
+  "id": "cm...",
   "title": "Verificare accesso al portale",
   "content": "Il cliente segnala un errore durante il login.",
   "author": "Mario Rossi",
   "context": "Acme S.r.l.",
   "type": "ISSUE",
   "priority": 4,
-  "status": "OPEN"
+  "status": "OPEN",
+  "createdAt": "2026-10-29T10:00:00.000Z",
+  "updatedAt": "2026-10-29T10:00:00.000Z"
 }
 ```
 
 ### Ricerca e filtri
-| Parametro | Descrizione |
+
+`GET /notes` accetta i seguenti parametri opzionali. Tutti i filtri forniti sono combinati con AND; `q` cerca il testo in `title` oppure in `content`.
+
+| Parametro | Regola |
 | --- | --- |
-| `q` | Ricerca parziale in `title` **oppure** `content`. |
+| `q` | Ricerca parziale in titolo o contenuto. |
 | `title` | Ricerca parziale nel solo titolo. |
 | `content` | Ricerca parziale nel solo contenuto. |
-| `context` | Corrispondenza esatta con cliente, progetto o attività. |
-| `type` | Uno dei tipi di nota supportati. |
-| `priority` | Filtra per livello di priorità da 1 a 5. |
-| `status` | Uno degli stati di nota supportati. |
+| `context` | Corrispondenza esatta con il contesto. |
+| `type` | Tipo di nota supportato. |
+| `priority` | Intero da 1 a 5. |
+| `status` | Stato di nota supportato. |
 
-I filtri sono combinabili: `q` applica una OR interna fra titolo e contenuto,
-mentre tutti i filtri forniti sono poi combinati con AND. Un filtro sconosciuto,
-vuoto o con valore fuori contratto restituisce `400`.
+Un parametro sconosciuto, vuoto o fuori contratto restituisce `400`.
 
 ### Errori
-| Codice | Quando viene restituito |
-| --- | --- |
-| `400` | Payload, parametri o valori non validi. |
-| `404` | Nota non trovata. |
-| `500` | Errore interno non previsto. |
 
-Gli errori applicativi hanno almeno `error` e `message`. Per gli errori di
-validazione la risposta include inoltre `issues`, con campo e motivo:
+Gli errori applicativi hanno `error` e `message`. Gli errori di validazione includono anche `issues`, una lista con campo e motivo.
 
 ```json
 {
   "error": "VALIDATION_ERROR",
   "message": "La richiesta contiene dati non validi",
-  "issues": [{ "field": "priority", "message": "deve essere un intero tra 1 e 5" }]
+  "issues": [
+    { "field": "priority", "message": "deve essere un intero tra 1 e 5" }
+  ]
 }
 ```
 
+| Codice | Significato |
+| --- | --- |
+| `400` | Richiesta, ID o filtro non validi. |
+| `404` | Nota non trovata. |
+| `500` | Errore interno non previsto; i dettagli non vengono esposti. |
+
 ## Esempi di richieste
 
-Per mantenere gli esempi semplici e in linea con le linee guida, ne sono
-riportati due: uno di creazione e uno di ricerca. In Windows PowerShell usare `curl.exe`, perché
-`curl` è un alias di `Invoke-WebRequest`. `--%` ferma il parsing di PowerShell;
-le virgolette del JSON restano quindi valide per il binario cURL.
+Con il server avviato, in Windows PowerShell usare `Invoke-RestMethod` per evitare le differenze di quoting di `curl`:
 
 ```powershell
-# Creazione
-curl.exe -X POST http://127.0.0.1:3000/notes -H "Content-Type: application/json" -d "{"title":"Verificare accesso al portale","content":"Il cliente segnala un errore durante il login.","author":"Mario Rossi","context":"Acme S.r.l.","type":"ISSUE","priority":4,"status":"OPEN"}"
+$body = @{
+  title = "Verificare accesso al portale"
+  content = "Il cliente segnala un errore durante il login."
+  author = "Mario Rossi"
+  context = "Acme S.r.l."
+  type = "ISSUE"
+  priority = 4
+  status = "OPEN"
+} | ConvertTo-Json
 
-# Ricerca generica con filtri combinati
-curl.exe --% http://127.0.0.1:3000/notes?q=login&context=Acme%20S.r.l.&status=OPEN
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:3000/notes" -ContentType "application/json" -Body $body
 ```
 
-In Bash, Git Bash o WSL sostituire `curl.exe --%` con `curl` e usare il JSON
-senza le barre inverse prima delle virgolette.
+Ricerca testuale con filtri combinati:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:3000/notes?q=login&context=Acme%20S.r.l.&status=OPEN"
+```
+
+In Bash, Git Bash o WSL gli stessi esempi possono essere eseguiti con `curl`:
+
+```bash
+curl -X POST http://127.0.0.1:3000/notes \
+  -H 'Content-Type: application/json' \
+  --data '{"title":"Verificare accesso al portale","content":"Il cliente segnala un errore durante il login.","author":"Mario Rossi","context":"Acme S.r.l.","type":"ISSUE","priority":4,"status":"OPEN"}'
+
+curl 'http://127.0.0.1:3000/notes?q=login&context=Acme%20S.r.l.&status=OPEN'
+```
 
 ## Scelte implementative
 
-- Il dominio usa una sola risorsa `Note`: `context` resta un campo testuale,
-  evitando una tabella clienti non necessaria ai requisiti del MVP.
-- Le route Fastify gestiscono HTTP e delegano regole di input agli schemi e
-  persistenza ai servizi Prisma. Questa separazione rende le responsabilità
-  leggibili e le API testabili senza avviare il server.
-- Le validazioni sono implementate nel progetto, senza introdurre una libreria
-  aggiuntiva: proteggono limiti testuali, enum, priorità, campi sconosciuti e
-  PATCH vuote.
-- Prisma gestisce schema e migration SQLite; una sola istanza del client viene
-  condivisa dall'applicazione per evitare connessioni duplicate durante lo
-  sviluppo.
-- Le note assenti vengono tradotte in `404`; errori di input in `400`; gli
-  errori inattesi non espongono dettagli interni al client.
+- **Una sola risorsa e contesto libero.** Il dominio viene mantenuto attorno a `Note`; `context` è una stringa e non una relazione con una tabella clienti. La scelta riduce il numero di concetti da gestire e lascia spazio a una futura evoluzione solo se l'anagrafica diventerà realmente necessaria.
+- **Responsabilità separate.** Le route Fastify gestiscono HTTP e codici di risposta, gli schemi controllano e normalizzano l'input, mentre il servizio usa Prisma per leggere e scrivere. Ogni parte ha quindi un compito riconoscibile: il codice resta più leggibile e i test possono verificare l'API senza dipendere dall'avvio del server.
+- **Validazioni esplicite e proporzionate.** I controlli sono implementati nel progetto senza aggiungere una libreria ulteriore. Verificano campi ammessi, lunghezza delle stringhe, valori degli enum, intervallo della priorità e assenza di una `PATCH` vuota. Per un MVP sono regole piccole ma visibili, facili da modificare e sufficienti a non salvare dati incoerenti.
+- **Schema riproducibile.** Prisma descrive il modello e registra la sua creazione nelle migration. Il client viene creato una sola volta e riutilizzato dall'applicazione, mentre le migration permettono a chi riceve il repository di ricostruire lo stesso database locale senza procedure manuali.
+- **Errori prevedibili per chi integra l'API.** Le situazioni attese hanno risposte distinte: `400` per dati non validi, `404` per una nota assente e `500` per un errore inatteso. In particolare, gli errori interni non espongono dettagli tecnici al client; questo rende il contratto più chiaro e riduce informazioni non necessarie nella risposta.
 
 ## Uso dell'AI
-Per questo progetto è stato utilizzato un piano Codex con GPT-5.6 terra con effort Medio.
-Inizialmente è stato usato per fare brainstorming, per comprendere meglio alcuni concetti poco chiari e per aiutarmi nella spiegazione delle componenti dello stack applicativo.
-una volta chiariti gli elementi di dubbio, ho iniziato a formare il Data Model, chiedendo conferma a seguito per capire se la struttura rispettasse i vincoli tecnici richiesti.
-Una volta fatto ciò ho integrato documenti guida all'AI, come AGENTS.md e, successivamente, SPEC.md, che uso spesso per imporre vincoli tecnici non troppo rigidi ma che mi pernmettano di non uscire dalle richieste.
+
+Codex desktop è stato usato direttamente nella cartella del repository come strumento di confronto durante il lavoro, non come sostituto delle decisioni progettuali. Il suo utilizzo ha seguito un percorso progressivo: prima chiarire lo stack e il perimetro dell'MVP, poi ragionare sul modello dati e sulla struttura dell'applicazione, infine revisionare validazioni, test e documentazione.
+
+L'AI mi ha aiutato a formulare alternative e a evidenziare punti da verificare, come per esempio la distinzione fra cliente e `context`, i campi minimi della nota, la separazione fra route, validazione e persistenza, e la coerenza tra filtri documentati e filtri realmente accettati. Le proposte sono state confrontate con la challenge e mantenute solo quando utili al requisito; sono state invece escluse funzionalità premature, come autenticazione, OpenAPI, Docker o una tabella clienti, perché non necessarie al flusso richiesto.
+
+Il lavoro non si è fermato alla generazione di una proposta, ma ha seguito anche la verifica e la validazione. Build TypeScript, test Vitest e verifiche manuali delle API sono stati usati per controllare il risultato; gli errori emersi hanno portato a correzioni del percorso SQLite, dei filtri testuali, dell'handler degli errori e del setup di test su Windows. `ai-log/prompts.md` conserva i prompt principali, gli output rilevanti, le decisioni adottate, le proposte corrette o scartate e le verifiche svolte. 
+
+Come descritto nel file AGENTS.md, Codex ha programmato seguendo task revisionati continuamente da me. La revisione unmana è fondamentale, a mio parere, per evitare di introdurre funzionalita che una intelligenza artificiale ritiene utili ma che sono superflue e, a lungo termine, difficilmente manutenibli.
 
 ## Limiti noti
 
-- Non sono presenti autenticazione, autorizzazione o proprietà della nota:
-  chi raggiunge il servizio può leggere e modificare tutte le note.
-- SQLite è adatto al contesto locale della challenge, non a un'installazione
-  distribuita con più istanze concorrenti o esigenze di alta disponibilità.
-- La lista non include paginazione, ordinamento esplicito o limiti di risultato.
-- Non sono disponibili OpenAPI, Docker, audit log, soft delete o endpoint di
-  health check; sono esclusi dal perimetro MVP.
-- Il servizio non applica una policy di conservazione o backup del database.
+- Non esistono autenticazione, autorizzazione o proprietà della nota: chi raggiunge il servizio può leggere e modificare tutte le note.
+- SQLite è appropriato per un MVP locale, non per più istanze concorrenti o alta disponibilità.
+- L'elenco non offre paginazione, ordinamento esplicito né limite dei risultati.
+- Non sono presenti audit log, soft delete, allegati, notifiche, health check, Docker o specifica OpenAPI.
+- Non sono previste policy di conservazione, backup o ripristino del database.
 
 ## Miglioramenti futuri
 
-- Introdurre utenti, ruoli e autenticazione prima di una pubblicazione esterna.
-- Aggiungere paginazione, ordinamento e indici mirati quando il volume di note
-  lo renderà necessario.
-- Sostituire o affiancare SQLite con un database server per scenari multiutente
-  e predisporre backup, osservabilità e logging strutturato.
-- Pubblicare una specifica OpenAPI e aggiungere test di integrazione su un
-  ambiente di deployment.
-- Valutare soft delete, audit trail e regole di conservazione insieme al cliente.
+- Introdurre identità, ruoli e autorizzazioni prima di esporre il servizio a utenti reali.
+- Definire insieme al cliente un'anagrafica di clienti e progetti se il testo libero del contesto non fosse più sufficiente.
+- Aggiungere paginazione, ordinamento e indici quando il volume dei dati lo richiederà.
+- Integrare audit trail, soft delete, backup, osservabilità e logging strutturato.
+- Valutare un database server per scenari multiutente e pubblicare una specifica OpenAPI quando servirà un'integrazione formale.
