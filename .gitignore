@@ -150,6 +150,7 @@ prisma/*.db-shm
 
 # Client Prisma generato localmente dal comando `npm run prisma:generate`.
 generated/
+src/generated/
 
 # Astro generated types
 .astro/
