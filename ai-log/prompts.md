@@ -507,3 +507,93 @@ comando esatto, quindi verificare l'esito dopo l'intervento manuale.
 - I file `.http` sono citati come opzione ammessa ma non costituiscono il
   percorso documentato, perché richiedono un client dedicato per essere
   eseguiti.
+
+### Prompt 20 - Riesame completo del README e lessico unificato
+
+**Richiesta**
+
+> Rivalutare e riformattare il README, anche ripartendo dalla sua struttura,
+> affinche sia una documentazione completa per chi deve comprendere, avviare e
+> valutare l'applicazione. Mantenere l'analisi dei requisiti personale e umana.
+
+**Lavoro svolto e decisioni applicate**
+
+- Il README e stato riscritto a partire dal comportamento effettivo di API,
+  validatori, schema Prisma, script npm e test, eliminando duplicazioni e
+  terminologia incoerente.
+- Il lessico ora usa in modo costante `nota`, `contesto`, `tipo`, `stato`,
+  `priorita`, `creazione`, `aggiornamento`, `ricerca` e `filtri`.
+- L'analisi iniziale e stata mantenuta in prima persona e separata dal contratto
+  tecnico: spiega interpretazione del problema, scelte di perimetro,
+  assunzioni, domande al cliente e limiti del MVP.
+- Sono state rese piu esplicite la sequenza di installazione, la configurazione
+  dell'ambiente, il ciclo delle migration, i dati di test isolati, i vincoli dei
+  payload, i filtri combinabili e la forma degli errori.
+- Gli esempi manuali usano `Invoke-RestMethod` in PowerShell e `curl` in Bash,
+  Git Bash o WSL. Non viene citato alcun file di richiesta non presente nel
+  repository.
+
+**Verifiche**
+
+- `npm.cmd run build` completato con successo.
+- `npm.cmd test` completato con successo: 1 file e 5 test superati.
+- Il README contiene tutte le 14 sezioni richieste dalle linee guida e non
+  documenta endpoint o funzionalita non implementati.
+
+### Prompt 22 - Valutazione della copertura degli edge case
+
+**Richiesta**
+
+> I cinque test effettuati coprono tutti gli edge case possibili? Quali casi
+> d'uso importanti mancano?
+
+**Esito della revisione**
+
+- Ispezionati il file di test, route, validatori, servizio Prisma e invarianti
+  della specifica, senza modificare il comportamento dell'applicazione.
+- I cinque test proteggono il flusso principale CRUD, la ricerca con filtri,
+  la PATCH parziale, alcune validazioni e il ciclo di eliminazione.
+- Non rappresentano una copertura completa: sono stati individuati casi da
+  aggiungere per validazioni di confine e tipi errati, campi sconosciuti,
+  priorita opzionale, 404 su PATCH/DELETE, filtri non validi o senza risultati,
+  ricerca titolo/contenuto separata e controllo di `updatedAt`.
+
+**Implementazione e verifiche**
+
+- Aggiunti sei test al file `tests/notes.test.ts`; la suite passa da 5 a 11
+  casi e verifica il contratto senza modificare l'API.
+- Coperti GET di una nota esistente, `priority` facoltativa, limiti del titolo,
+  validazioni di body e filtri, protezione dei campi gestiti dal server,
+  ricerche per campo, lista vuota, 404 su PATCH/DELETE e `updatedAt` in PATCH.
+- Aggiornato il README: la sezione Test indica ora 11 test e la copertura
+  estesa delle validazioni.
+- Eseguiti con successo `npm.cmd test` (11 test) e `npm.cmd run build`.
+
+### Prompt 21 - Approfondimento narrativo di analisi, test e AI
+
+**Richiesta e indicazioni dello sviluppatore**
+
+> Rendere piu approfondite le sezioni Analisi della richiesta, Test, Scelte
+> implementative e Uso dell'AI. Il README deve restare tecnico, ma le parti
+> esplicative devono essere piu morbide; evitare la prima persona e spiegare
+> soprattutto il motivo dei test e delle scelte.
+
+**Decisioni applicate**
+
+- Le quattro sezioni sono state riscritte in una terza persona discorsiva:
+  tecnica nei termini necessari, ma orientata a chi non ha seguito il progetto.
+- La sezione Test ora collega ogni caso al comportamento e al rischio che
+  intende verificare, senza affermare una copertura totale del codice.
+- Le scelte implementative spiegano il compromesso fra semplicità dell'MVP,
+  chiarezza delle responsabilità, validazione, riproducibilità e contratto
+  degli errori.
+- La sezione Uso dell'AI descrive il percorso seguito, il ruolo consultivo
+  dello strumento, i controlli applicati alle proposte e il contenuto
+  ricostruibile di questo log, in coerenza con le linee guida della challenge.
+
+**Verifiche**
+
+- Riesaminate le indicazioni delle linee guida sull'analisi iniziale, sui test
+  essenziali e sulla tracciabilità dell'uso dell'AI.
+- Verificata la coerenza delle descrizioni con test, codice e documentazione
+  già presenti; nessuna modifica al comportamento dell'applicazione.

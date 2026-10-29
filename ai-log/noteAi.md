@@ -1,0 +1,7 @@
+# Idee interessanti o cose apprese durante il progetto tramite l'ai:
+- stack applicativo ignoto, o almeno, basi di Server-Client le avevo ma molte cose erano sconosciute, utile è stato utilizzare spiegasioni semplificate e incrementali, trovabili nel file 
+- appreso i funzionamenti di base di toool come curl, postman e in generale il funzionamento di un Backend Web.
+- compreso l'utilizzo di determinate funzioni specifiche, come ad esempio l'implementazione dei metodi effettivi in src\routes\notes.ts.
+
+# Nota personale
+Ritengo che l'utilizzo dell'AI in progetti di cui si ha poca conoscenza dello stack o del funzionamento di una applicazione simile in un contesto reale, sia di vitale importanza. Sono abituato a segnarmi le informazioni su block notes cartaceo per avere un luogo dove ritrovarle sempre, per il futuro da sviluppatore, e comprendo meglio le cose se spiegate in maniera semplice e differente, ad esempio, dalla documentazione ufficiale, che comunque sono in grado di capire. In questo l'Ai con contesto è eccellente e sono utilizzatore, da anni, di Codex. Non mi ritengo comunque un Vibe Coder, in quanto mi piace sempre avere un occhio (e apprendere) ciò che viene fatto (soprattutto come e perchè). L'importante è trovare collegamenti, similitudini e funzionalita che sono coerenti tra progetti diversi, e sfruttarli per guidare l'AI nella programmazione e progettazione di essi, verificando sempre che all'effettivo siano la soluzione migliore in reelazione ai requisiti posti.
