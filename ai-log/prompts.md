@@ -273,3 +273,237 @@ comando esatto, quindi verificare l'esito dopo l'intervento manuale.
   schema, generazione client, build e test terminano con successo.
 - Aggiunto `prisma:deploy` per applicare migration già versionate e documentata
   la generazione esplicita del client richiesta da Prisma 7.
+
+### Prompt 12 — T3: validazione, Prisma e servizi
+
+**Obiettivo approvato**
+
+> Aggiungere tipi/validazioni delle note, singola istanza Prisma e logica
+> applicativa CRUD/ricerca prima delle route HTTP.
+
+**Decisioni applicate**
+
+- Il client Prisma viene generato sotto `src/generated/`, ignorato da Git e
+  incluso nel build TypeScript con percorsi coerenti.
+- Le validazioni sono manuali e senza nuove dipendenze: campi obbligatori,
+  enum, priorità `1..5`, payload PATCH non vuoto e filtri supportati.
+- Il servizio traduce l'assenza di una nota in `NoteNotFoundError`; T4 lo
+  mapperà alla risposta HTTP `404`.
+
+**Verifica e correzione**
+
+- PowerShell ha bloccato l'esecuzione di `npm.ps1` per policy locale prima di
+  raggiungere i comandi di progetto. Il problema è ambientale, non legato ai
+  moduli T3; la verifica prosegue usando `npm.cmd`.
+
+- Il primo controllo manuale del servizio non è partito perché PowerShell ha
+  espanso `$disconnect` nel comando inline. Nessun modulo applicativo è stato
+  eseguito o modificato; il comando viene ripetuto con l'escape corretto.
+
+- Anche il secondo comando inline ha perso le virgolette nella shell. Per
+  isolare la verifica dal quoting PowerShell viene usato un file TypeScript
+  temporaneo, eliminato dopo l'esecuzione.
+
+**Esito T3**
+
+- Client Prisma rigenerato in `src/generated/`, mantenuto fuori dal controllo
+  versione.
+- Verifica manuale del servizio riuscita: create, ricerca `q` con filtri,
+  update, delete e `NoteNotFoundError` dopo eliminazione.
+- `npm.cmd run build` e `npm.cmd test` terminano con successo; il file di
+  verifica temporaneo è stato rimosso.
+
+### Prompt 13 — T4: API Fastify e filtri aggiornati
+
+**Obiettivo approvato**
+
+> Esporre il CRUD REST con Fastify, rispettando i filtri aggiornati nella
+> documentazione e nella specifica.
+
+**Decisioni applicate**
+
+- I filtri `title` e `content` si aggiungono a `q`, `context`, `type`,
+  `priority` e `status`; `q` cerca trasversalmente, gli altri filtri si
+  combinano con AND.
+- Le route delegano validazione ai schema e persistenza ai service.
+- L'app converte input non validi in `400`, note assenti in `404` e errori non
+  previsti in `500`, senza esporre dettagli interni.
+
+**Correzione di compilazione**
+
+- Il typecheck ha segnalato che l'errore ricevuto dall'handler Fastify è
+  `unknown`. È stato introdotto il type guard `isBadRequestError`, che accede a
+  `statusCode` e `message` solo dopo avere verificato forma e tipi.
+
+**Esito T4**
+
+- Verificate tramite Fastify injection: creazione `201`, input non valido
+  `400`, lista con filtri, nota assente `404`, PATCH vuota `400`, update `200`,
+  delete `204` e GET dopo delete `404`.
+- La nota temporanea usata dalla verifica è stata rimossa; build, test e
+  controllo del diff terminano con successo.
+
+### Prompt 14 — T5: test API e correzione filtri testuali
+
+**Problema segnalato e correzione**
+
+- Il validatore della lista dichiarava `title` e `content` nei tipi, ma non li
+  accettava tra i query parameter. Sono stati aggiunti ai filtri supportati e
+  alla normalizzazione, in coerenza con README, SPEC e servizio.
+
+**Decisioni applicate**
+
+- I test usano `Fastify.inject`, senza aprire una porta HTTP.
+- Prima del test viene applicata la migration al database isolato
+  `prisma/test.db`; il database di sviluppo non viene modificato.
+- I casi coprono create, input invalidi, update, ricerca/filtri, delete e
+  nota inesistente, come richiesto dalle linee guida.
+
+**Correzione del test harness**
+
+- Vitest su Windows non può avviare `npm.cmd` con `execFileSync`. Il setup del
+  database di test ora invoca direttamente la CLI Prisma tramite l'eseguibile
+  Node, evitando un wrapper di shell e mantenendo l'isolamento del database.
+
+**Esito T5**
+
+- `npm.cmd test` esegue cinque test API, tutti superati, sul database isolato.
+- `npm.cmd run build` continua a terminare con successo.
+
+### Prompt 13 — Filtri testuali mirati
+
+**Prompt**
+
+> Applicare filtri che consentano di cercare separatamente nel titolo e nel
+> contenuto, mantenendo la ricerca generica disponibile.
+
+**Decisioni applicate**
+
+- Aggiunti i query parameter opzionali `title` e `content`: entrambi eseguono
+  una ricerca parziale solo nel campo corrispondente.
+- `q` resta una scorciatoia di ricerca trasversale su `title` oppure `content`.
+- Tutti i filtri forniti restano combinati con AND; la sola OR interna resta
+  quella di `q`.
+- Aggiornati contratto in `SPEC.md` e documentazione API nel README.
+
+**Verifiche**
+
+- `npm.cmd run build` completato con successo.
+- `npm.cmd test` completato con successo; la suite non contiene ancora file di
+  test, quindi Vitest termina correttamente con `--passWithNoTests`.
+
+### Prompt 15 — T6: documentazione finale e riproducibilità
+
+**Obiettivo approvato**
+
+> Completare il README senza modificare l'analisi e il flusso di ragionamento
+> già scritti, spiegando implementazione, validazione e avvio su un altro
+> dispositivo.
+
+**Decisioni applicate**
+
+- Aggiornate solo le sezioni operative, API, esempi, scelte implementative,
+  limiti e miglioramenti futuri; la parte iniziale di analisi resta invariata.
+- Documentata la sequenza riproducibile: clone, `npm ci`, copia di `.env`,
+  generazione del client Prisma, applicazione migration, build, test e avvio.
+- Documentati modello dati, vincoli di validazione, tutti i filtri, forma degli
+  errori, database di test isolato e limiti effettivi dell'MVP.
+
+**Verifiche eseguite**
+
+- Il README contiene tutte le 14 sezioni richieste dalla challenge e ogni
+  comando, endpoint, filtro e vincolo documentato corrisponde al codice.
+- `npm.cmd run build` completato con successo.
+- `npm.cmd test` completato con successo: 1 file e 5 test API superati.
+- `git diff --check` completato senza errori; i soli avvisi riguardano la
+  conversione CRLF prevista da Git.
+- Le regole locali di Git ignorano `prisma/dev.db`, `prisma/test.db` e
+  `src/generated/`. Un avviso di permesso sul file di ignore globale dell'utente
+  è esterno al repository e non modifica l'esito delle regole locali.
+
+### Prompt 16 — Correzione esempi di test manuale in PowerShell
+
+**Problema segnalato**
+
+> In PowerShell `curl -X`, `-H` e `-d` restituiscono errori di parametro o
+> comando non riconosciuto, con il servizio già in esecuzione.
+
+**Causa e correzione applicata**
+
+- In Windows PowerShell `curl` è un alias di `Invoke-WebRequest`, non il
+  binario cURL; inoltre `\` non è un carattere di continuazione di riga.
+- Il README ora propone comandi PowerShell copiabili basati su
+  `Invoke-RestMethod` e conserva un esempio `curl` solo per Bash, Git Bash e
+  WSL. Documenta anche l'uso esplicito di `curl.exe` come alternativa.
+
+**Verifiche eseguite**
+
+- `GET /notes` con `Invoke-RestMethod` ha risposto correttamente dal servizio
+  già in esecuzione (lista vuota, `200`).
+- Il ciclo PowerShell `POST` (`201`), `PATCH` (`200`) e `DELETE` (`204`) ha
+  completato correttamente usando `Invoke-RestMethod`; la nota temporanea è
+  stata eliminata.
+- `git diff --check` completato senza errori; nessuna modifica a dipendenze o
+  al comportamento applicativo.
+
+### Prompt 17 — Allineamento degli esempi alle linee guida
+
+**Richiesta e decisione**
+
+> Riesaminare la sezione di test manuale per attenersi alle istruzioni della
+> challenge.
+
+- `Guidelines.md` consente esempi `curl` o un formato semplice; il documento
+  di pianificazione del progetto raccomanda due soli esempi: creazione e
+  ricerca.
+- Il README è stato ridotto a questi due esempi `curl.exe`, validi in Windows
+  PowerShell. Non usa più `Invoke-RestMethod` né esempi aggiuntivi di PATCH e
+  DELETE.
+
+**Correzione e verifica**
+
+- La prima prova del comando `curl.exe` ha restituito `400`: Windows cURL ha
+  ricevuto un body senza le virgolette JSON, perché PowerShell ricompone gli
+  argomenti dei programmi nativi.
+- Gli esempi ora usano `curl.exe --%` e le virgolette JSON escape. La creazione
+  ha restituito `201` e la ricerca con filtri `200`; la nota temporanea della
+  verifica è stata eliminata con `204`.
+- In Bash, Git Bash o WSL sostituire `curl.exe --%` con `curl` e rimuovere gli
+  escape davanti alle virgolette JSON.
+
+### Prompt 18 — Valutazione di chiamate API più strutturate
+
+**Richiesta**
+
+> Valutare alternative al comando cURL PowerShell con JSON incorporato, per
+> rendere l'invio di una nuova nota più leggibile e manutenibile.
+
+**Esito della valutazione**
+
+- Le linee guida consentono esplicitamente esempi cURL, file `.http`, Postman
+  collection o un altro formato semplice: non impongono il JSON nel comando.
+- La soluzione consigliata è mantenere `POST /notes` e il suo body JSON,
+  separando il payload in un file `.json` oppure in un file `.http`; non serve
+  modificare endpoint, schema Prisma o validazioni.
+- `Invoke-RestMethod` con oggetto PowerShell e `ConvertTo-Json` è una valida
+  alternativa per inserimenti interattivi su Windows. OpenAPI è un bonus
+  opzionale, utile solo se si vuole anche una specifica formale/interattiva.
+- Se verranno modificati contratto API o artefatti di test, aggiornare nello
+  stesso intervento SPEC, README, test e questo log.
+
+### Prompt 19 — Payload strutturato eseguibile dal terminale
+
+**Richiesta e decisione**
+
+> Documentare il formato strutturato nel README, senza vincolare chi riceve il
+> progetto a estensioni VS Code, e consentire l'invio da terminale.
+
+- Aggiunto `requests/create-note.json`, con un payload POST valido, separato
+  dal comando di invio.
+- Il README usa come percorso principale `Invoke-RestMethod -InFile` in
+  Windows PowerShell e documenta l'equivalente `curl --data-binary @file` per
+  shell compatibili. Nessuna dipendenza npm, estensione IDE o modifica al
+  contratto HTTP è necessaria.
+- I file `.http` sono citati come opzione ammessa ma non costituiscono il
+  percorso documentato, perché richiedono un client dedicato per essere
+  eseguiti.
