@@ -45,7 +45,7 @@ Clonare il repository e installare le versioni bloccate nel lockfile:
 
 ```powershell
 git clone https://github.com/m4rcoo2/Backend_Notes_Service.git
-cd backend-notes-service
+cd Backend_Notes_Service
 npm ci
 ```
 
@@ -68,6 +68,11 @@ L'unica variabile richiesta è `DATABASE_URL`:
 | `HOST` | No | `127.0.0.1` | Interfaccia su cui il server ascolta. |
 
 `.env` e i file SQLite restano locali e sono ignorati da Git. Non inserire segreti in `.env.example`.
+
+Su macOS o Linux, per copiare l'ambiente usare
+```bash
+cp .env.example .env
+```
 
 ## Database e migration
 
@@ -97,7 +102,7 @@ Per creare una nuova migration durante lo sviluppo, dopo aver modificato lo sche
 npm run prisma:migrate -- --name descrizione_modifica
 ```
 
-Il database `prisma/dev.db` viene creato localmente e non va versionato. Su macOS o Linux, per copiare l'ambiente usare `cp .env.example .env`.
+Il database `prisma/dev.db` viene creato localmente e non va versionato. 
 
 ## Avvio del progetto
 
@@ -118,6 +123,16 @@ Il servizio non implementa autenticazione. Non impostare `HOST=0.0.0.0` né espo
 
 ## Test
 
+Per una verifica completa dopo un clone:
+
+```powershell
+npm run prisma:generate
+npm run prisma:deploy
+npm run build
+npm test
+```
+Altrimenti, se gia buildato:
+
 ```powershell
 npm test
 ```
@@ -135,14 +150,6 @@ I quattordici test coprono il flusso principale e i principali confini del contr
 
 La suite non mira alla copertura totale del codice: non simula errori interni di Prisma né concorrenza tra richieste, ma protegge i comportamenti richiesti e i punti in cui una regressione sarebbe più visibile per chi usa l'API.
 
-Per una verifica completa dopo un clone:
-
-```powershell
-npm run prisma:generate
-npm run prisma:deploy
-npm run build
-npm test
-```
 
 ## API disponibili
 
@@ -292,21 +299,17 @@ Invoke-RestMethod -Method Delete -Uri "http://127.0.0.1:3000/notes/$noteId"
 ```
 
 L'operazione restituisce `204 No Content`, quindi non produce un body di risposta. Dopo l'eliminazione, una richiesta `GET /notes/$noteId` restituisce `404`.
-
+### Comandi di esempio per Linux/MacOS 
 In Bash, Git Bash o WSL, la stessa sequenza può essere eseguita con `curl`. Sostituire `ID_RESTITUITO_DAL_POST` con il valore `id` presente nella risposta del primo comando.
 
 ```bash
-curl -X POST http://127.0.0.1:3000/notes \
-  -H 'Content-Type: application/json' \
-  --data '{"title":"Verificare accesso al portale","content":"Il cliente segnala un errore durante il login.","author":"Mario Rossi","context":"Acme S.r.l.","type":"ISSUE","priority":4,"status":"OPEN"}'
+curl -X POST http://127.0.0.1:3000/notes -H 'Content-Type: application/json' --data '{"title":"Verificare accesso al portale","content":"Il cliente segnala un errore durante il login.","author":"Mario Rossi","context":"Acme S.r.l.","type":"ISSUE","priority":4,"status":"OPEN"}'
 
 curl 'http://127.0.0.1:3000/notes?q=login&context=Acme%20S.r.l.&status=OPEN'
 
 curl "http://127.0.0.1:3000/notes/ID_RESTITUITO_DAL_POST"
 
-curl -X PATCH "http://127.0.0.1:3000/notes/ID_RESTITUITO_DAL_POST" \
-  -H 'Content-Type: application/json' \
-  --data '{"status":"IN_PROGRESS","priority":5}'
+curl -X PATCH "http://127.0.0.1:3000/notes/ID_RESTITUITO_DAL_POST" -H 'Content-Type: application/json' --data '{"status":"IN_PROGRESS","priority":5}'
 
 curl -X DELETE "http://127.0.0.1:3000/notes/ID_RESTITUITO_DAL_POST"
 ```
