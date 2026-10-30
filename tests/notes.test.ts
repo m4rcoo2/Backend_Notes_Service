@@ -267,4 +267,94 @@ describe("Notes API", () => {
     });
     expect(new Date(response.json().updatedAt).getTime()).toBeGreaterThan(oldUpdatedAt.getTime());
   });
+
+  it("normalizza le stringhe e applica tutti i limiti testuali", async () => {
+    const normalized = await app.inject({
+      method: "POST",
+      url: "/notes",
+      payload: {
+        ...validNote,
+        title: "  Titolo normalizzato  ",
+        content: "  Contenuto normalizzato  ",
+        author: "  Mario Rossi  ",
+        context: "  Acme S.r.l.  ",
+      },
+    });
+    expect(normalized.statusCode).toBe(201);
+    expect(normalized.json()).toMatchObject({
+      title: "Titolo normalizzato",
+      content: "Contenuto normalizzato",
+      author: "Mario Rossi",
+      context: "Acme S.r.l.",
+    });
+
+    const atAllLimits = await app.inject({
+      method: "POST",
+      url: "/notes",
+      payload: {
+        ...validNote,
+        content: "a".repeat(10_000),
+        author: "a".repeat(120),
+        context: "a".repeat(200),
+      },
+    });
+    expect(atAllLimits.statusCode).toBe(201);
+
+    for (const payload of [
+      { ...validNote, content: "a".repeat(10_001) },
+      { ...validNote, author: "a".repeat(121) },
+      { ...validNote, context: "a".repeat(201) },
+    ]) {
+      const response = await app.inject({ method: "POST", url: "/notes", payload });
+      expect(response.statusCode).toBe(400);
+    }
+  });
+
+  it("rifiuta tipi errati, campi sconosciuti e PATCH non valide senza scrivere", async () => {
+    for (const payload of [
+      { ...validNote, content: null },
+      { ...validNote, author: 42 },
+      { ...validNote, context: [] },
+      { ...validNote, priority: null },
+      { ...validNote, extra: "non ammesso" },
+    ]) {
+      const response = await app.inject({ method: "POST", url: "/notes", payload });
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toMatchObject({ error: "VALIDATION_ERROR" });
+    }
+    expect(await prisma.note.count()).toBe(0);
+
+    const note = await createNote();
+    for (const payload of [{ title: "   " }, { priority: null }, { id: "nuovo-id" }, []]) {
+      const response = await app.inject({ method: "PATCH", url: `/notes/${note.id}`, payload });
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toMatchObject({ error: "VALIDATION_ERROR" });
+    }
+    expect(await prisma.note.findUnique({ where: { id: note.id } })).toMatchObject(validNote);
+  });
+
+  it("rifiuta body JSON malformati e valori di filtro fuori contratto", async () => {
+    const malformed = await app.inject({
+      method: "POST",
+      url: "/notes",
+      headers: { "content-type": "application/json" },
+      payload: '{"title":',
+    });
+    expect(malformed.statusCode).toBe(400);
+    expect(malformed.json()).toMatchObject({ error: "VALIDATION_ERROR" });
+    expect(await prisma.note.count()).toBe(0);
+
+    for (const url of [
+      "/notes?title=",
+      "/notes?content=",
+      "/notes?context=",
+      "/notes?priority=0",
+      "/notes?priority=6",
+      "/notes?priority=not-a-number",
+    ]) {
+      const response = await app.inject({ method: "GET", url });
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toMatchObject({ error: "VALIDATION_ERROR" });
+    }
+  });
 });

@@ -134,16 +134,9 @@ Non inserire segreti, token, credenziali o contenuti personali nel log.
 ## My request:
 è ora di analizzare e formattare e utilizzare un lessico unificato nel readme, che come dfa richiesta, ha importanza tanto quanto il codice scritto. per questo motivo necessito che i campi impostati vengano rivalutati e rianalizzati, anche a costo di ripartire da 0, per rendere fruibile in maniera completa e esaustiva la documentazione. il cliente deve capire come funziona la mia applicazione, cosa gli serve per avviarla, come ho ragionato, che scelte ho dfatto e perceh. se ci sono cose che non ti tornano, fammi delle domande per chairirle. vorrei che la parte di analisi dei requisiti restasse umana e personale
 
-### 💻 Tool: `exec_command`
+## 🤖 Agent
 
-```json
-{
-  "cmd": "Get-Content -Raw AGENTS.md; rg --files -g '!node_modules' -g '!prisma/dev.db' -g '!*.lock' | Sort-Object; git status --short",
-  "workdir": "Q:\\ComputerScience\\Backend_Notes_Service",
-  "yield_time_ms": 10000,
-  "max_output_tokens": 30000
-}
-```
+Rianalizzo il progetto reale e riscrivo il README con un lessico coerente, mantenendo l’analisi dei requisiti in una voce personale e concreta. Verificherò anche coerenza con API, configurazione e test, aggiornando il log AI come richiesto dal progetto.
 
 **Output:**
 
@@ -159,16 +152,7 @@ warning: unable to access 'C:\Users\utente/.config/git/ignore': Permission denie
 
 ```
 
-### 💻 Tool: `exec_command`
-
-```json
-{
-  "cmd": "Get-Content -Raw README.md; Get-Content -Raw package.json; Get-Content -Raw .env.example; Get-Content -Raw prisma/schema.prisma; Get-Content -Raw prisma/migrations/20261028232035_init/migration.sql; Get-Content -Raw src/app.ts; Get-Content -Raw src/server.ts; Get-Content -Raw src/routes/notes.ts; Get-Content -Raw src/schemas/notes.ts; Get-Content -Raw src/services/notes.ts; Get-Content -Raw src/lib/prisma.ts; Get-Content -Raw tests/notes.test.ts; Get-Content -Raw ai-log/prompts.md; Get-Content -Raw tsconfig.json; Get-Content -Raw SPEC.md",
-  "workdir": "Q:\\ComputerScience\\Backend_Notes_Service",
-  "yield_time_ms": 10000,
-  "max_output_tokens": 60000
-}
-```
+> 📊 **Tokens:** primary 11.0%, in=22488, out=204
 
 **Output:**
 
@@ -184,16 +168,7 @@ warning: unable to access 'C:\Users\utente/.config/git/ignore': Permission denie
 
 ```
 
-### 💻 Tool: `exec_command`
-
-```json
-{
-  "cmd": "Get-Content -Raw src/routes/notes.ts; Get-Content -Raw src/schemas/notes.ts; Get-Content -Raw src/services/notes.ts; Get-Content -Raw tests/notes.test.ts; Get-Content -Raw requests/create-note.json; Get-Content -Raw Guidelines.md; Get-Content -Raw .gitignore; Get-Content -Raw ai-log/prompts.md | Select-Object -Last 160",
-  "workdir": "Q:\\ComputerScience\\Backend_Notes_Service",
-  "yield_time_ms": 10000,
-  "max_output_tokens": 50000
-}
-```
+> 📊 **Tokens:** primary 11.0%, in=23817, out=225
 
 **Output:**
 
@@ -209,16 +184,7 @@ warning: unable to access 'C:\Users\utente/.config/git/ignore': Permission denie
 
 ```
 
-### 💻 Tool: `exec_command`
-
-```json
-{
-  "cmd": "(Get-Content -Raw README.md).Length; rg -n \"README|document|curl|Postman|Esempi|richieste\" Guidelines.md; Get-Content -Raw .gitignore; git diff -- package.json package-lock.json; git status --short --untracked-files=all; npm.cmd run build; npm.cmd test",
-  "workdir": "Q:\\ComputerScience\\Backend_Notes_Service",
-  "yield_time_ms": 30000,
-  "max_output_tokens": 30000
-}
-```
+> 📊 **Tokens:** primary 11.0%, in=34968, out=167
 
 **Output:**
 
@@ -234,16 +200,7 @@ warning: unable to access 'C:\Users\utente/.config/git/ignore': Permission denie
 
 ```
 
-### 💻 Tool: `exec_command`
-
-```json
-{
-  "cmd": "Get-Content Guidelines.md | Select-Object -Skip 70 -First 250; Get-Content -Raw src/lib/prisma.ts; Get-Content -Raw prisma7.config.ts; Get-Content -Raw ai-log/prompts.md | Select-Object -First 90",
-  "workdir": "Q:\\ComputerScience\\Backend_Notes_Service",
-  "yield_time_ms": 10000,
-  "max_output_tokens": 30000
-}
-```
+> 📊 **Tokens:** primary 11.0%, in=45437, out=203
 
 **Output:**
 
@@ -258,6 +215,12 @@ warning: unable to access 'C:\Users\utente/.config/git/ignore': Permission denie
 
 
 ```
+
+> 📊 **Tokens:** primary 11.0%, in=48819, out=143
+
+## 🤖 Agent
+
+Ho rilevato due punti da correggere nella documentazione: il README mescola analisi, contratto tecnico e implementazione, e cita un flusso di richieste non presente nella cartella di lavoro. Riscrivo quindi il documento partendo dal comportamento effettivo verificato, senza inventare artefatti o funzionalità.
 
 ### 🔧 Custom Tool: `apply_patch`
 
@@ -275,6 +238,8 @@ Script error:
 apply_patch verification failed: invalid patch: multiple operations target Q:\ComputerScience\Backend_Notes_Service\README.md
 ```
 
+> 📊 **Tokens:** primary 11.0%, in=56208, out=4268
+
 ### 🔧 Custom Tool: `apply_patch`
 
 ```text
@@ -290,6 +255,8 @@ Success. Updated the following files:
 D Q:\ComputerScience\Backend_Notes_Service\README.md
 
 ```
+
+> 📊 **Tokens:** primary 11.0%, in=60525, out=97
 
 ### 🔧 Custom Tool: `apply_patch`
 
@@ -583,6 +550,8 @@ A Q:\ComputerScience\Backend_Notes_Service\README.md
 
 ```
 
+> 📊 **Tokens:** primary 11.0%, in=60646, out=4001
+
 ### 🔧 Custom Tool: `apply_patch`
 
 ```text
@@ -600,16 +569,7 @@ apply_patch verification failed: Failed to find expected lines in Q:\ComputerSci
 ### Prompt 19 â€” Payload strutturato eseguibile dal terminale
 ```
 
-### 💻 Tool: `exec_command`
-
-```json
-{
-  "cmd": "Get-Content ai-log/prompts.md | Select-Object -Last 35; Format-Hex -Path ai-log/prompts.md -Count 4; git diff --check; git diff --stat; git diff -- README.md | Select-Object -First 80",
-  "workdir": "Q:\\ComputerScience\\Backend_Notes_Service",
-  "yield_time_ms": 10000,
-  "max_output_tokens": 20000
-}
-```
+> 📊 **Tokens:** primary 11.0%, in=64671, out=696
 
 **Output:**
 
@@ -624,6 +584,8 @@ apply_patch verification failed: Failed to find expected lines in Q:\ComputerSci
 -- SQLite per la creazione di un file DB di tipo SQL.
 
 ```
+
+> 📊 **Tokens:** primary 11.0%, in=65437, out=215
 
 ### 🔧 Custom Tool: `apply_patch`
 
@@ -675,20 +637,11 @@ M Q:\ComputerScience\Backend_Notes_Service\ai-log\prompts.md
 
 ```
 
+> 📊 **Tokens:** primary 11.0%, in=68079, out=644
+
 ## 🤖 Agent
 
 La riscrittura è pronta: l’analisi ora resta personale e distinta dal contratto API, mentre il resto segue una terminologia stabile e documenta solo il comportamento implementato. Sto eseguendo l’ultimo controllo di coerenza e formattazione del diff.
-
-### 💻 Tool: `exec_command`
-
-```json
-{
-  "cmd": "$required = @('Descrizione','Analisi della richiesta','Stack utilizzato','Installazione','Configurazione ambiente','Database e migration','Avvio del progetto','Test','API disponibili','Esempi di richieste','Scelte implementative','Uso dell''AI','Limiti noti','Miglioramenti futuri'); $readme = Get-Content -Raw README.md; foreach ($section in $required) { if ($readme -notmatch ('(?m)^## ' + [regex]::Escape($section) + '$')) { throw \"Sezione mancante: $section\" } }; 'Tutte le 14 sezioni obbligatorie sono presenti.'; git diff --check; git status --short; git diff --numstat -- README.md ai-log/prompts.md",
-  "workdir": "Q:\\ComputerScience\\Backend_Notes_Service",
-  "yield_time_ms": 10000,
-  "max_output_tokens": 10000
-}
-```
 
 **Output:**
 
@@ -704,6 +657,8 @@ warning: in the working copy of 'ai-log/prompts.md', LF will be replaced by CRLF
 
 ```
 
+> 📊 **Tokens:** primary 11.0%, in=68747, out=405
+
 ## 🤖 Agent
 
 README rianalizzato e riscritto con lessico coerente e orientato a chi deve valutare o avviare il progetto.
@@ -717,6 +672,8 @@ README rianalizzato e riscritto con lessico coerente e orientato a chi deve valu
 File principale: [README.md](Q:\ComputerScience\Backend_Notes_Service\README.md)
 
 Ho lasciato invariate le modifiche preesistenti a `package.json` e `package-lock.json`.
+
+> 📊 **Tokens:** primary 11.0%, in=69422, out=237
 
 ## 👤 User
 
@@ -745,6 +702,8 @@ Per approfondire il README senza renderlo artificiale, mi servono tre tue scelte
 
 3. Per “Uso dell’AI”, vuoi una descrizione trasparente e dettagliata del tuo contributo personale (cosa hai deciso, corretto e verificato tu) oppure un riepilogo più sintetico del processo?
 
+> 📊 **Tokens:** primary 11.0%, in=69860, out=212
+
 ## 👤 User
 
 # Context from my IDE setup:
@@ -767,17 +726,6 @@ uso dell'ai, nonostante sia anche commetnato io ailog, deve comunque spiegare qu
 
 Rivedo le quattro sezioni con un tono tecnico ma più accompagnato: terza persona, motivazioni esplicite e maggiore trasparenza sul ruolo dell’AI. Mi baserò anche sui criteri delle linee guida e aggiornerò il log della revisione.
 
-### 💻 Tool: `exec_command`
-
-```json
-{
-  "cmd": "$readme = Get-Content README.md; foreach ($heading in @('## Analisi della richiesta','## Test','## Scelte implementative','## Uso dell''AI')) { $start = [array]::IndexOf($readme, $heading); $end = $readme.Length; for ($i = $start + 1; $i -lt $readme.Length; $i++) { if ($readme[$i] -match '^## ') { $end = $i; break } }; \"--- $heading ---\"; $readme[$start..($end-1)] }; Get-Content Guidelines.md | Select-Object -Skip 145 -First 170; Get-Content ai-log/prompts.md | Select-Object -Last 45",
-  "workdir": "Q:\\ComputerScience\\Backend_Notes_Service",
-  "yield_time_ms": 10000,
-  "max_output_tokens": 30000
-}
-```
-
 **Output:**
 
 ```text
@@ -791,6 +739,10 @@ Rivedo le quattro sezioni con un tono tecnico ma più accompagnato: terza person
   documenta endpoint o funzionalita non implementati.
 
 ```
+
+> 📊 **Tokens:** primary 11.0%, in=70261, out=330
+
+> 📊 **Tokens:** primary 11.0%, in=70261, out=330
 
 ### 🔧 Custom Tool: `apply_patch`
 
@@ -865,6 +817,8 @@ M Q:\ComputerScience\Backend_Notes_Service\README.md
 
 ```
 
+> 📊 **Tokens:** primary 11.0%, in=73333, out=2693
+
 ### 🔧 Custom Tool: `apply_patch`
 
 ```text
@@ -912,16 +866,7 @@ M Q:\ComputerScience\Backend_Notes_Service\ai-log\prompts.md
 
 ```
 
-### 💻 Tool: `exec_command`
-
-```json
-{
-  "cmd": "$readme = Get-Content README.md; foreach ($heading in @('## Analisi della richiesta','## Test','## Scelte implementative','## Uso dell''AI')) { $start = [array]::IndexOf($readme, $heading); $end = $readme.Length; for ($i = $start + 1; $i -lt $readme.Length; $i++) { if ($readme[$i] -match '^## ') { $end = $i; break } }; \"--- $heading ---\"; $readme[$start..($end-1)] }; git diff --check; git status --short",
-  "workdir": "Q:\\ComputerScience\\Backend_Notes_Service",
-  "yield_time_ms": 10000,
-  "max_output_tokens": 20000
-}
-```
+> 📊 **Tokens:** primary 11.0%, in=76050, out=540
 
 **Output:**
 
@@ -936,6 +881,8 @@ warning: unable to access 'C:\Users\utente/.config/git/ignore': Permission denie
  M package.json
 
 ```
+
+> 📊 **Tokens:** primary 11.0%, in=76614, out=325
 
 ### 🔧 Custom Tool: `apply_patch`
 
@@ -958,6 +905,8 @@ M Q:\ComputerScience\Backend_Notes_Service\README.md
 
 ```
 
+> 📊 **Tokens:** primary 11.0%, in=78854, out=130
+
 ## 🤖 Agent
 
 Ho approfondito le quattro sezioni richieste in [README.md](Q:\ComputerScience\Backend_Notes_Service\README.md):
@@ -968,3 +917,5 @@ Ho approfondito le quattro sezioni richieste in [README.md](Q:\ComputerScience\B
 - “Uso dell’AI”: descrive il processo, le decisioni verificate e il ruolo del log, coerentemente con le linee guida.
 
 Ho aggiornato anche [ai-log/prompts.md](Q:\ComputerScience\Backend_Notes_Service\ai-log\prompts.md) e verificato la formattazione con `git diff --check`.
+
+> 📊 **Tokens:** primary 11.0%, in=79008, out=199

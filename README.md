@@ -8,14 +8,17 @@ Il progetto è un MVP: espone le operazioni essenziali su una singola risorsa, c
 
 ## Analisi della richiesta
 
-La richiesta viene interpretata come l'esigenza di un punto unico, semplice e persistente in cui il team possa raccogliere informazioni operative legate a un cliente, a un progetto o a un'attività. Il risultato non vuole essere un prodotto collaborativo completo: rappresenta la base backend di un possibile strumento interno.
+La richiesta è stata interpretata come l'esigenza di un punto unico, semplice e persistente in cui il team possa raccogliere informazioni operative legate a un cliente, a un progetto o a un'attività. Il risultato non vuole essere un prodotto collaborativo completo: rappresenta infatti la base backend di un possibile strumento interno.
 
-Per rendere una nota comprensibile anche a distanza di tempo, sono stati considerati essenziali titolo e contenuto, autore, contesto, tipo e stato. La priorità resta facoltativa: è utile per distinguere ciò che richiede attenzione, ma non deve trasformarsi in un dato obbligatorio quando non aggiunge valore. Identificativo e date sono invece generati dal server, così ogni nota conserva dati tecnici coerenti e non dipende dall'orologio o dalle scelte del client.
-
-L'MVP include creazione, elenco, dettaglio, modifica, eliminazione, ricerca testuale, filtri e persistenza. Restano fuori dal perimetro frontend, utenti, autenticazione, ruoli, paginazione, ordinamento configurabile, allegati e notifiche. Sono funzionalità plausibili in un prodotto reale, ma anticiparle avrebbe aumentato la complessità senza migliorare il flusso essenziale richiesto dalla challenge.
+### Modello dati: la Nota
+Per rendere una nota comprensibile anche a distanza di tempo, sono stati considerati essenziali titolo e contenuto, autore, contesto, tipo e stato. La priorità è considerata facoltativa: è utile per distinguere ciò che richiede attenzione, ma non deve trasformarsi in un dato obbligatorio quando non aggiunge valore. Identificativo e date sono invece generati dal server, così ogni nota conserva dati tecnici coerenti e non dipende dall'orologio o dalle scelte del client.
 
 Il campo `context` è volutamente testo libero: può contenere il nome di un cliente, di una commessa, di un progetto o di un'attività. In questo modo la nota può essere collegata rapidamente al suo ambito senza introdurre una tabella clienti e API aggiuntive non richieste. Se il contesto dovesse diventare condiviso, validato o gestito come anagrafica, il modello potrà evolvere in una risorsa dedicata.
 
+### Funzionalita inserite:
+L'MVP include creazione, elenco, dettaglio, modifica, eliminazione, ricerca testuale, filtri e persistenza. Restano fuori dal perimetro frontend, utenti, autenticazione, ruoli, paginazione, ordinamento configurabile, allegati e notifiche. Sono funzionalità plausibili in un prodotto reale, ma anticiparle avrebbe aumentato la complessità senza migliorare il flusso essenziale richiesto dalla challenge.
+
+### Valutazioni implementative:
 Prima di un utilizzo in produzione sarebbe utile chiarire chi può leggere e modificare le note, se serve uno storico delle modifiche, quali siano volumi, tempi di conservazione e regole di backup, se clienti e progetti debbano provenire da un'anagrafica e come vadano ordinati i risultati. Le risposte a queste domande inciderebbero direttamente su modello dati, sicurezza e priorità di sviluppo.
 
 La consegna mantiene alcuni limiti intenzionali: SQLite è un database locale, non sono presenti controllo degli accessi né backup automatici e l'elenco non è paginato. Per un MVP sono compromessi ragionevoli; non sono invece caratteristiche adatte, senza ulteriori interventi, a un servizio esposto pubblicamente.
@@ -121,15 +124,16 @@ npm test
 
 La suite usa `Fastify.inject`: le richieste vengono inviate direttamente all'applicazione Fastify, senza aprire una porta HTTP. Questo mantiene i test rapidi e concentrati sul contratto delle API. Prima dell'esecuzione Prisma applica le migration a `prisma/test.db`, un database separato da quello di sviluppo: ogni test può creare e rimuovere dati senza modificare le note locali.
 
-I cinque test scelti coprono i comportamenti che rendono affidabile il flusso principale:
+I quattordici test coprono il flusso principale e i principali confini del contratto:
 
-- la creazione di una nota valida verifica che i dati siano persistiti e che il server generi ID e timestamp;
-- un payload con priorità non valida e una `PATCH` vuota verificano che l'API rifiuti richieste ambigue o fuori contratto prima di scrivere nel database;
-- l'aggiornamento parziale verifica che una modifica non sovrascriva involontariamente i campi non inviati;
-- ricerca e filtri combinati verificano che le note possano essere recuperate in modo utile nel lavoro quotidiano;
-- la nota inesistente e l'eliminazione verificano la risposta `404` e confermano che una nota eliminata non sia più leggibile.
+- creazione valida, ID e timestamp generati dal server, dettaglio di una nota esistente e `priority` omessa;
+- creazione e aggiornamento parziale, conservazione dei campi non inviati e aggiornamento di `updatedAt`;
+- `404` per risorse inesistenti e per la lettura dopo un'eliminazione;
+- ricerca in titolo e contenuto, filtri combinati e lista vuota quando non esistono risultati;
+- rifiuto di body, PATCH e filtri non validi, inclusi campi sconosciuti, enum errati, priorità fuori intervallo o di tipo errato e query string vuote;
+- normalizzazione degli spazi iniziali e finali, limiti minimi e massimi dei campi testuali e body JSON malformato.
 
-La suite non mira alla copertura totale del codice: è pensata per proteggere i comportamenti richiesti e i punti in cui una regressione sarebbe più visibile per chi usa l'API.
+La suite non mira alla copertura totale del codice: non simula errori interni di Prisma né concorrenza tra richieste, ma protegge i comportamenti richiesti e i punti in cui una regressione sarebbe più visibile per chi usa l'API.
 
 Per una verifica completa dopo un clone:
 
@@ -223,7 +227,11 @@ Gli errori applicativi hanno `error` e `message`. Gli errori di validazione incl
 
 ## Esempi di richieste
 
-Con il server avviato, in Windows PowerShell usare `Invoke-RestMethod` per evitare le differenze di quoting di `curl`:
+Con il server avviato, la sequenza seguente mostra almeno una volta ogni operazione disponibile. Gli esempi usano la stessa nota: il suo identificativo viene salvato in `$noteId` dopo la creazione e riutilizzato per dettaglio, modifica ed eliminazione.
+
+In Windows PowerShell usare `Invoke-RestMethod`, così non si incontrano le differenze di quoting dell'alias `curl`.
+
+### 1. Creare una nota — `POST /notes`
 
 ```powershell
 $body = @{
@@ -236,16 +244,56 @@ $body = @{
   status = "OPEN"
 } | ConvertTo-Json
 
-Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:3000/notes" -ContentType "application/json" -Body $body
+$created = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:3000/notes" -ContentType "application/json" -Body $body
+$noteId = $created.id
+$created
 ```
 
-Ricerca testuale con filtri combinati:
+La risposta ha stato `201` e contiene la nota, compreso l'ID generato dal server.
+
+### 2. Elencare e filtrare le note — `GET /notes`
 
 ```powershell
 Invoke-RestMethod -Uri "http://127.0.0.1:3000/notes?q=login&context=Acme%20S.r.l.&status=OPEN"
 ```
 
-In Bash, Git Bash o WSL gli stessi esempi possono essere eseguiti con `curl`:
+Questo `GET` cerca `login` in titolo o contenuto e lo combina con `context` e `status`. 
+
+Per ottenere tutte le note basta chiamare `http://127.0.0.1:3000/notes` senza query string:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:3000/notes"
+```
+
+### 3. Leggere una nota per ID — `GET /notes/:id`
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:3000/notes/$noteId"
+```
+Dove `$noteId` è L'ID della nota che si vuole analizzare.
+
+### 4. Aggiornare parzialmente una nota — `PATCH /notes/:id`
+
+```powershell
+$updateBody = @{
+  status = "IN_PROGRESS"
+  priority = 5
+} | ConvertTo-Json
+
+Invoke-RestMethod -Method Patch -Uri "http://127.0.0.1:3000/notes/$noteId" -ContentType "application/json" -Body $updateBody
+```
+
+Sono inviati solo i campi da modificare; gli altri valori della nota restano invariati.
+
+### 5. Eliminare una nota — `DELETE /notes/:id`
+
+```powershell
+Invoke-RestMethod -Method Delete -Uri "http://127.0.0.1:3000/notes/$noteId"
+```
+
+L'operazione restituisce `204 No Content`, quindi non produce un body di risposta. Dopo l'eliminazione, una richiesta `GET /notes/$noteId` restituisce `404`.
+
+In Bash, Git Bash o WSL, la stessa sequenza può essere eseguita con `curl`. Sostituire `ID_RESTITUITO_DAL_POST` con il valore `id` presente nella risposta del primo comando.
 
 ```bash
 curl -X POST http://127.0.0.1:3000/notes \
@@ -253,15 +301,31 @@ curl -X POST http://127.0.0.1:3000/notes \
   --data '{"title":"Verificare accesso al portale","content":"Il cliente segnala un errore durante il login.","author":"Mario Rossi","context":"Acme S.r.l.","type":"ISSUE","priority":4,"status":"OPEN"}'
 
 curl 'http://127.0.0.1:3000/notes?q=login&context=Acme%20S.r.l.&status=OPEN'
+
+curl "http://127.0.0.1:3000/notes/ID_RESTITUITO_DAL_POST"
+
+curl -X PATCH "http://127.0.0.1:3000/notes/ID_RESTITUITO_DAL_POST" \
+  -H 'Content-Type: application/json' \
+  --data '{"status":"IN_PROGRESS","priority":5}'
+
+curl -X DELETE "http://127.0.0.1:3000/notes/ID_RESTITUITO_DAL_POST"
 ```
 
 ## Scelte implementative
 
-- **Una sola risorsa e contesto libero.** Il dominio viene mantenuto attorno a `Note`; `context` è una stringa e non una relazione con una tabella clienti. La scelta riduce il numero di concetti da gestire e lascia spazio a una futura evoluzione solo se l'anagrafica diventerà realmente necessaria.
-- **Responsabilità separate.** Le route Fastify gestiscono HTTP e codici di risposta, gli schemi controllano e normalizzano l'input, mentre il servizio usa Prisma per leggere e scrivere. Ogni parte ha quindi un compito riconoscibile: il codice resta più leggibile e i test possono verificare l'API senza dipendere dall'avvio del server.
-- **Validazioni esplicite e proporzionate.** I controlli sono implementati nel progetto senza aggiungere una libreria ulteriore. Verificano campi ammessi, lunghezza delle stringhe, valori degli enum, intervallo della priorità e assenza di una `PATCH` vuota. Per un MVP sono regole piccole ma visibili, facili da modificare e sufficienti a non salvare dati incoerenti.
-- **Schema riproducibile.** Prisma descrive il modello e registra la sua creazione nelle migration. Il client viene creato una sola volta e riutilizzato dall'applicazione, mentre le migration permettono a chi riceve il repository di ricostruire lo stesso database locale senza procedure manuali.
-- **Errori prevedibili per chi integra l'API.** Le situazioni attese hanno risposte distinte: `400` per dati non validi, `404` per una nota assente e `500` per un errore inatteso. In particolare, gli errori interni non espongono dettagli tecnici al client; questo rende il contratto più chiaro e riduce informazioni non necessarie nella risposta.
+- **Una sola risorsa, con un contesto volutamente libero.** Il perimetro iniziale ruota attorno a `Note`, perché il bisogno da coprire è raccogliere e ritrovare informazioni operative, non costruire un sistema completo per clienti, progetti e utenti. Per questo `context` è una stringa: può rappresentare subito un cliente, una commessa, un progetto o un'attività senza richiedere anagrafiche, relazioni e endpoint aggiuntivi. Una tabella dedicata avrebbe senso solo dopo aver chiarito se tali dati debbano essere condivisi, validati e governati; introdurla nell'MVP avrebbe aumentato la complessità senza rispondere a un requisito emerso.
+
+- **Modello piccolo, ma con le informazioni necessarie per lavorare sulle note.** Titolo e contenuto descrivono la nota, mentre autore, contesto, tipo e stato permettono di capirla e classificarla anche a distanza di tempo. La priorità è opzionale perché è utile solo quando serve distinguere l'urgenza; renderla obbligatoria avrebbe costretto a inserire un valore artificiale per quelle note che non hanno una reale importanza. ID e timestamp sono invece generati dal server: il client non può creare identificativi incoerenti né alterare le date tecniche della risorsa.
+
+- **Responsabilità separate per mantenere il contratto leggibile e verificabile.** Le route Fastify ricevono la richiesta e stabiliscono la risposta HTTP; gli schemi validano e normalizzano l'input; il servizio contiene le operazioni CRUD e di ricerca; Prisma resta confinato al livello di persistenza. Questa divisione è nata per poter introdurre e controllare il comportamento di ogni singolo layer: prima modello e migration, poi validazione e servizi, infine route e mapping degli errori. Riduce anche il rischio che una modifica ai dettagli del database modifichi accidentalmente il contratto HTTP e consente ai test di usare `Fastify.inject` senza aprire una porta di rete.
+
+- **Validazioni manuali, esplicite e proporzionate al dominio.** Non è stata aggiunta una libreria dedicata perché le regole richieste sono circoscritte e facilmente leggibili nel progetto: campi ammessi e obbligatori, stringhe non vuote con limiti di lunghezza, enum supportati, priorità intera fra 1 e 5, query parameter noti e `PATCH` non vuota. Le validazioni normalizzano anche gli spazi iniziali e finali prima della persistenza. La scelta non è soltanto di semplicità: mantiene visibili le regole dell'API e impedisce di salvare dati parziali o incoerenti. La revisione dei filtri `title` e `content`, inizialmente dichiarati ma non accettati dal validatore, ha inoltre confermato la necessità di verificare insieme documentazione, validazione, servizio e test.
+
+- **Ricerca utile senza anticipare requisiti di scala.** `q` cerca trasversalmente in titolo e contenuto, mentre i filtri mirati e quelli di classificazione si combinano con AND. Questa soluzione copre sia una ricerca rapida sia la consultazione di note appartenenti a uno specifico contesto, tipo, priorità o stato. Non sono stati introdotti paginazione, ordinamento configurabile o indici aggiuntivi perché mancano requisiti su volume e modalità di consultazione: sono miglioramenti appropriati quando l'uso reale dimostrerà che servono.
+
+- **Database locale riproducibile, non un artefatto da trasferire.** Prisma descrive il modello e registra la sua evoluzione nelle migration versionate; chi clona il repository genera il client e applica le migration per ricreare il database SQLite locale. Durante la configurazione è stato inoltre allineato `DATABASE_URL` a `file:./prisma/dev.db`, così il percorso effettivo del database coincide con le regole Git che lo escludono: migration e configurazione restano consegnabili, mentre dati locali e file SQLite associati non vengono pubblicati.
+
+- **Errori prevedibili senza esporre dettagli interni.** Il servizio rende esplicita l'assenza di una nota tramite un errore applicativo, che le route trasformano in `404`; input e filtri non validi diventano `400`; le condizioni inattese restano `500`. L'handler controlla la forma dell'errore prima di leggerne le proprietà, perché in TypeScript un errore ricevuto può essere di tipo sconosciuto. In questo modo il client riceve un contratto stabile e messaggi utili, mentre dettagli di Prisma o dell'ambiente rimangono nei log del server invece di essere esposti nella risposta.
 
 ## Uso dell'AI
 
@@ -271,7 +335,7 @@ L'AI mi ha aiutato a formulare alternative e a evidenziare punti da verificare, 
 
 Il lavoro non si è fermato alla generazione di una proposta, ma ha seguito anche la verifica e la validazione. Build TypeScript, test Vitest e verifiche manuali delle API sono stati usati per controllare il risultato; gli errori emersi hanno portato a correzioni del percorso SQLite, dei filtri testuali, dell'handler degli errori e del setup di test su Windows. `ai-log/prompts.md` conserva i prompt principali, gli output rilevanti, le decisioni adottate, le proposte corrette o scartate e le verifiche svolte. 
 
-Come descritto nel file AGENTS.md, Codex ha programmato seguendo task revisionati continuamente da me. La revisione unmana è fondamentale, a mio parere, per evitare di introdurre funzionalita che una intelligenza artificiale ritiene utili ma che sono superflue e, a lungo termine, difficilmente manutenibli.
+Come descritto nel file AGENTS.md, Codex ha programmato seguendo task revisionati continuamente da me. La revisione unmana è fondamentale, a mio parere, per evitare di introdurre funzionalità che una intelligenza artificiale ritiene utili ma che sono superflue e, a lungo termine, difficilmente manutenibli.
 
 ## Limiti noti
 

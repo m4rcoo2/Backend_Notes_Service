@@ -597,3 +597,57 @@ comando esatto, quindi verificare l'esito dopo l'intervento manuale.
   essenziali e sulla tracciabilità dell'uso dell'AI.
 - Verificata la coerenza delle descrizioni con test, codice e documentazione
   già presenti; nessuna modifica al comportamento dell'applicazione.
+
+### Prompt 24 — Implementazione dei test di edge case
+
+**Richiesta**
+
+> Implementare i test di edge case individuati nella revisione della copertura
+> e aggiornare il README con lo stato reale della suite.
+
+**Decisioni applicate**
+
+- Mantenuti i test già presenti e aggiunti casi per normalizzazione delle
+  stringhe, confini dei campi testuali, tipi errati, campi sconosciuti, PATCH
+  invalide senza scritture, JSON malformato e filtri fuori contratto.
+- Il README ora documenta la suite di 14 test e precisa gli ambiti non simulati
+  (errori interni Prisma e concorrenza), senza modificare il contratto API.
+
+**Verifiche**
+
+- `npm.cmd test` completato con successo: 14 test superati.
+- `npm.cmd run build` completato con successo.
+- `git diff --check` eseguito senza errori di whitespace.
+
+### Prompt 23 — Copertura operativa completa degli esempi README
+
+**Richiesta**
+
+> Il README, come guida operativa, deve mostrare almeno una volta tutti i casi
+> d'uso e i metodi disponibili, per validare l'applicazione e capire come
+> inviare le richieste.
+
+**Decisioni applicate**
+
+- Verificate le route effettivamente esposte: `POST /notes`, `GET /notes`,
+  `GET /notes/:id`, `PATCH /notes/:id` e `DELETE /notes/:id`.
+- Gli esempi PowerShell ora formano un flusso completo: creazione, salvataggio
+  dell'ID restituito, elenco filtrato, dettaglio, aggiornamento parziale ed
+  eliminazione.
+- Aggiunti gli equivalenti comandi `curl` per Bash, Git Bash e WSL; l'ID del
+  risultato della creazione è indicato esplicitamente come valore da sostituire.
+- Documentato che `DELETE` restituisce `204` senza body e che la lettura dopo
+  l'eliminazione restituisce `404`.
+
+**Verifiche**
+
+- Confrontati endpoint, metodi, payload e codici di risposta degli esempi con
+  `src/routes/notes.ts` e con le validazioni in `src/schemas/notes.ts`.
+- Nessuna modifica al comportamento dell'applicazione, alle dipendenze o alla
+  configurazione.
+- `npm.cmd run build` completato con successo.
+- Il primo `npm.cmd test` ha superato il timeout di 10 secondi nel setup Prisma
+  e non ha eseguito i test; il comando ripetuto è passato in 6,39 secondi.
+  Il controllo manuale di `prisma migrate deploy` ha richiesto 1,45 secondi:
+  l'episodio è stato classificato come rallentamento transitorio di avvio, non
+  come regressione dell'API, e registrato come `B10` in `SPEC.md`.

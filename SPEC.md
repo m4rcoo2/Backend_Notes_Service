@@ -64,3 +64,4 @@ MVP REST per note operative: CRUD, search, filters, SQLite persistence.
 |B7|2026-10-29|error handler read unknown error properties|V12|
 |B8|2026-10-29|validator omitted `title` & `content` filters|V4|
 |B9|2026-10-29|Vitest cannot spawn `npm.cmd` directly|invoke Prisma CLI via Node|
+|B10|2026-10-30|cold Prisma setup exceeded Vitest 10s hook timeout; rerun passed|rerun full suite; no app regression|
