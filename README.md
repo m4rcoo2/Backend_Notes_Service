@@ -159,9 +159,9 @@ Base URL: `http://127.0.0.1:3000`. Le richieste con body devono inviare `Content
 | --- | --- | --- | --- |
 | `POST` | `/notes` | `201` e nota creata | `400` payload non valido |
 | `GET` | `/notes` | `200` e lista di note | `400` filtri non validi |
-| `GET` | `/notes/:id` | `200` e nota richiesta | `400` ID vuoto; `404` assente |
-| `PATCH` | `/notes/:id` | `200` e nota aggiornata | `400` ID o payload non validi; `404` assente |
-| `DELETE` | `/notes/:id` | `204` senza body | `400` ID vuoto; `404` assente |
+| `GET` | `/notes/id` | `200` e nota richiesta | `400` ID vuoto; `404` assente |
+| `PATCH` | `/notes/id` | `200` e nota aggiornata | `400` ID o payload non validi; `404` assente |
+| `DELETE` | `/notes/id` | `204` senza body | `400` ID vuoto; `404` assente |
 
 ### Payload delle note
 
@@ -177,7 +177,7 @@ In creazione sono obbligatori tutti i campi eccetto `priority`. Il server rifiut
 | `priority` | Opzionale; intero da 1 a 5. |
 | `status` | Uno dei quattro valori elencati nel modello dati. |
 
-`PATCH /notes/:id` accetta almeno un campo modificabile fra quelli sopra. Non è possibile inviare un body vuoto né modificare direttamente ID e timestamp.
+`PATCH /notes/id` accetta almeno un campo modificabile fra quelli sopra. Non è possibile inviare un body vuoto né modificare direttamente ID e timestamp.
 
 Una nota restituita dal server ha questa forma:
 
